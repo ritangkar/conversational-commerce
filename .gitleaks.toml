@@ -1,0 +1,7 @@
+title = "conversational-commerce"
+[extend]
+useDefault = true
+[[rules]]
+id = "cc-provider-key-property"
+description = "Provider key assigned in a properties file"
+regex = '''cc\.provider\.key\.[A-Za-z0-9_.-]+\s*=\s*[^\s$#]+'''

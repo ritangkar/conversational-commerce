@@ -1,0 +1,13 @@
+name: storefront
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }   # ASSUMPTION AS-01
+      - name: Build and test
+        working-directory: storefront/chat-feature
+        run: |
+          if [ -f package.json ]; then npm ci && npm run lint --if-present && npm test --if-present && npm run build --if-present; else echo "::notice::chat-feature not created yet (Stage 8)"; fi

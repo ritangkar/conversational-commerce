@@ -1,0 +1,12 @@
+name: backend
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SAP Commerce platform check
+        run: |
+          # SAP Commerce binaries are licensed and not in this repo (docs/assumptions.md AS-09).
+          # Provide a platform via a self-hosted runner or private artifact, then replace this step with the ant build + unit tests.
+          echo "::notice::Backend build skipped: no SAP Commerce platform available in CI yet."
