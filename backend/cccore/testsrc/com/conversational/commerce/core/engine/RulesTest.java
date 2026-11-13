@@ -4,14 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.conversational.commerce.core.engine.model.Domain.Order;
-import com.conversational.commerce.core.engine.model.Domain.OrderLine;
-import com.conversational.commerce.core.engine.model.Domain.OrderStatus;
-import com.conversational.commerce.core.engine.rules.BudgetPlanner;
-import com.conversational.commerce.core.engine.rules.BudgetPlanner.Candidate;
-import com.conversational.commerce.core.engine.rules.PatternChangeRule;
-import com.conversational.commerce.core.engine.rules.QuickOrderParser;
-import com.conversational.commerce.core.engine.rules.ReplenishmentRule;
+import com.conversational.commerce.core.dao.ChatDao.Order;
+import com.conversational.commerce.core.dao.ChatDao.OrderLine;
+import com.conversational.commerce.core.dao.ChatDao.OrderStatus;
+import com.conversational.commerce.core.service.impl.DefaultChatService;
+import com.conversational.commerce.core.service.impl.DefaultChatService.BudgetCandidate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +29,7 @@ class RulesTest
     {
         final List<Order> orders = List.of(order(60, OrderStatus.DELIVERED, "A", 10), order(30, OrderStatus.DELIVERED, "A", 10),
                 order(10, OrderStatus.CANCELLED, "A", 10));
-        assertTrue(new ReplenishmentRule().compute(orders, TODAY, 180, 3, 0.9).isEmpty());
+        assertTrue(DefaultChatService.replenishment(orders, TODAY, 180, 3, 0.9).isEmpty());
     }
 
     @Test
@@ -50,11 +47,11 @@ class RulesTest
         orders.add(order(105, OrderStatus.DELIVERED, "FRESH", 1));
         orders.add(order(75, OrderStatus.DELIVERED, "FRESH", 1));
         orders.add(order(2, OrderStatus.DELIVERED, "FRESH", 1));
-        final var items = new ReplenishmentRule().compute(orders, TODAY, 180, 3, 0.9);
-        assertEquals(List.of("LATE", "DUE"), items.stream().map(ReplenishmentRule.Item::code).toList());
+        final var items = DefaultChatService.replenishment(orders, TODAY, 180, 3, 0.9);
+        assertEquals(List.of("LATE", "DUE"), items.stream().map(DefaultChatService.ReplenishmentItem::code).toList());
         assertTrue(items.get(0).overdue());
         assertFalse(items.get(1).overdue() && items.get(1).intervalDays() != 30);
-        assertTrue(items.stream().allMatch(ReplenishmentRule.Item::estimate));
+        assertTrue(items.stream().allMatch(DefaultChatService.ReplenishmentItem::estimate));
     }
 
     @Test
@@ -66,11 +63,11 @@ class RulesTest
         {
             orders.add(order(150 - i * 30, OrderStatus.DELIVERED, "P", qty[i]));
         }
-        final var found = new PatternChangeRule().detect(orders, 30, 2, 2);
+        final var found = DefaultChatService.detectPatternChanges(orders, 30, 2, 2);
         assertEquals(1, found.size());
         assertEquals(39, found.get(0).changePercent());
-        assertEquals(PatternChangeRule.Direction.DOWN, found.get(0).direction());
-        assertTrue(new PatternChangeRule().detect(orders.subList(0, 3), 30, 2, 2).isEmpty(), "not enough sample");
+        assertEquals("DOWN", found.get(0).direction());
+        assertTrue(DefaultChatService.detectPatternChanges(orders.subList(0, 3), 30, 2, 2).isEmpty(), "not enough sample");
     }
 
     @Test
@@ -79,23 +76,23 @@ class RulesTest
         final Random random = new Random(42);
         for (int run = 0; run < 2000; run++)
         {
-            final List<Candidate> candidates = new ArrayList<>();
+            final List<BudgetCandidate> candidates = new ArrayList<>();
             final int n = random.nextInt(15);
             for (int i = 0; i < n; i++)
             {
-                candidates.add(new Candidate("C" + i, random.nextInt(2_000_000) - 10, random.nextInt(500) - 5, random.nextInt(1000)));
+                candidates.add(new BudgetCandidate("C" + i, random.nextInt(2_000_000) - 10, random.nextInt(500) - 5, random.nextInt(1000)));
             }
             final long budget = random.nextInt(100_000_000) - 1000;
-            final BudgetPlanner.Plan plan = new BudgetPlanner().plan(candidates, budget);
+            final DefaultChatService.BudgetPlan plan = DefaultChatService.planBudget(candidates, budget);
             assertTrue(plan.totalMinor() <= Math.max(0, budget), "total " + plan.totalMinor() + " budget " + budget);
-            assertEquals(plan.lines().stream().mapToLong(BudgetPlanner.Line::lineMinor).sum(), plan.totalMinor());
+            assertEquals(plan.lines().stream().mapToLong(DefaultChatService.BudgetLine::lineMinor).sum(), plan.totalMinor());
         }
     }
 
     @Test
     void budgetPlannerReducesQuantityBeforeExcluding()
     {
-        final var plan = new BudgetPlanner().plan(List.of(new Candidate("A", 100, 10, 5), new Candidate("B", 500, 1, 1)), 1200);
+        final var plan = DefaultChatService.planBudget(List.of(new BudgetCandidate("A", 100, 10, 5), new BudgetCandidate("B", 500, 1, 1)), 1200);
         assertEquals(10, plan.lines().get(0).quantity());
         assertEquals("OVER_BUDGET", plan.excluded().get(0).reason());
     }
@@ -103,11 +100,11 @@ class RulesTest
     @Test
     void quickOrderGrammar()
     {
-        final var lines = new QuickOrderParser().parse("Need 20 of EL-4821, 10 x 2.5mm cable 100m, EL-9910 x 5; whatever replaces EL-1033.");
+        final var lines = DefaultChatService.parseQuickOrder("Need 20 of EL-4821, 10 x 2.5mm cable 100m, EL-9910 x 5; whatever replaces EL-1033.");
         assertEquals(4, lines.size());
         assertEquals(20, lines.get(0).quantity());
-        assertEquals(QuickOrderParser.Kind.DESCRIPTION, lines.get(1).kind());
+        assertEquals("DESCRIPTION", lines.get(1).kind());
         assertEquals(5, lines.get(2).quantity());
-        assertEquals(QuickOrderParser.Kind.REPLACEMENT_OF, lines.get(3).kind());
+        assertEquals("REPLACEMENT_OF", lines.get(3).kind());
     }
 }

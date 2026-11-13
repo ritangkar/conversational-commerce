@@ -1,129 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ASSUMPTION (AS-03): standard hybris Spring layout; no owner sample for bean XML. Overridable SPIs use the alias pattern
-     (bean ccDefaultXxx, alias ccXxx) so a client replaces a gateway without touching this file (PL-08). NOT LOADED in this
-     repository's CI: needs a SAP platform. -->
+<!-- ASSUMPTION (AS-03): standard hybris Spring layout; no owner sample for bean XML. The whole chat backend is two beans: the DAO and
+     the service. Override either by alias to replace data access or behaviour. NOT LOADED in this repository's CI: needs a SAP platform. -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
        default-lazy-init="true">
 
     <context:annotation-config/>
 
-    <!-- configuration (PL-01) -->
-    <bean id="ccPropertiesConfigSource" class="com.conversational.commerce.core.platform.PropertiesConfigSource"/>
-    <bean id="ccBackofficeConfigSource" class="com.conversational.commerce.core.platform.BackofficeConfigSource"/>
-    <util:list id="ccConfigSources" value-type="com.conversational.commerce.core.engine.config.ConfigSource"><ref bean="ccBackofficeConfigSource"/><ref bean="ccPropertiesConfigSource"/></util:list>
-    <bean id="ccConfigurationService" class="com.conversational.commerce.core.engine.config.DefaultCcConfigurationService"/>
+    <bean id="ccDefaultChatDao" class="com.conversational.commerce.core.dao.impl.ChatDaoImpl"/>
+    <alias name="ccDefaultChatDao" alias="ccChatDao"/>
 
-    <!-- DAOs (owner convention: XxxDao + XxxDaoImpl) -->
-    <bean id="ccOrderDao" class="com.conversational.commerce.core.dao.impl.CcOrderDaoImpl"/>
-    <bean id="ccProductSearchDao" class="com.conversational.commerce.core.dao.impl.CcProductSearchDaoImpl"/>
-    <bean id="ccCoPurchaseDao" class="com.conversational.commerce.core.dao.impl.CcCoPurchaseDaoImpl"/>
-    <bean id="ccConfigDao" class="com.conversational.commerce.core.dao.impl.CcConfigDaoImpl"/>
-    <bean id="ccInterestEventDao" class="com.conversational.commerce.core.dao.impl.CcInterestEventDaoImpl"/>
-    <bean id="ccFeedbackDao" class="com.conversational.commerce.core.dao.impl.CcFeedbackDaoImpl"/>
-    <bean id="ccUsageCounterDao" class="com.conversational.commerce.core.dao.impl.CcUsageCounterDaoImpl"/>
-    <bean id="ccBusinessAttributeDao" class="com.conversational.commerce.core.dao.impl.CcBusinessAttributeDaoImpl"/>
-
-    <!-- gateways (SPIs; override by alias) -->
-    <bean id="ccDefaultOrderGateway" class="com.conversational.commerce.core.platform.PlatformOrderGateway"/>
-    <alias name="ccDefaultOrderGateway" alias="ccOrderGateway"/>
-    <bean id="ccDefaultCatalogGateway" class="com.conversational.commerce.core.platform.PlatformCatalogGateway"/>
-    <alias name="ccDefaultCatalogGateway" alias="ccCatalogGateway"/>
-    <bean id="ccDefaultPriceGateway" class="com.conversational.commerce.core.platform.PlatformPriceGateway"/>
-    <alias name="ccDefaultPriceGateway" alias="ccPriceGateway"/>
-    <bean id="ccDefaultStockGateway" class="com.conversational.commerce.core.platform.DemoStockGateway"/>
-    <alias name="ccDefaultStockGateway" alias="ccStockGateway"/>
-    <bean id="ccDefaultFaqGateway" class="com.conversational.commerce.core.platform.PlatformFaqGateway"/>
-    <alias name="ccDefaultFaqGateway" alias="ccFaqGateway"/>
-    <bean id="ccDefaultCoPurchaseGateway" class="com.conversational.commerce.core.platform.PlatformCoPurchaseGateway"/>
-    <alias name="ccDefaultCoPurchaseGateway" alias="ccCoPurchaseGateway"/>
-    <bean id="ccDefaultBusinessAttributeGateway" class="com.conversational.commerce.core.platform.PlatformBusinessAttributeGateway"/>
-    <alias name="ccDefaultBusinessAttributeGateway" alias="ccBusinessAttributeGateway"/>
-    <bean id="ccDefaultInterestEventSink" class="com.conversational.commerce.core.platform.PlatformInterestEventSink"/>
-    <alias name="ccDefaultInterestEventSink" alias="ccInterestEventSink"/>
-    <bean id="ccDefaultUsageCounterStore" class="com.conversational.commerce.core.platform.PlatformUsageCounterStore"/>
-    <alias name="ccDefaultUsageCounterStore" alias="ccUsageCounterStore"/>
-    <bean id="ccDefaultRetentionStore" class="com.conversational.commerce.core.platform.PlatformRetentionStore"/>
-    <alias name="ccDefaultRetentionStore" alias="ccRetentionStore"/>
-
-    <!-- sanitiser (PL-03) -->
-    <util:list id="ccSanitisationRules" value-type="com.conversational.commerce.core.engine.sanitiser.SanitisationRule">
-        <util:constant static-field="com.conversational.commerce.core.engine.sanitiser.RegexMaskingRule.EMAIL"/>
-        <util:constant static-field="com.conversational.commerce.core.engine.sanitiser.RegexMaskingRule.ORDER_CODE"/>
-        <util:constant static-field="com.conversational.commerce.core.engine.sanitiser.RegexMaskingRule.PHONE"/>
-        <util:constant static-field="com.conversational.commerce.core.engine.sanitiser.RegexMaskingRule.LONG_DIGITS"/>
-    </util:list>
-    <bean id="ccSanitiser" class="com.conversational.commerce.core.engine.sanitiser.DefaultSanitiser"/>
-
-    <!-- providers (PL-02) -->
-    <bean id="ccGeminiAdapter" class="com.conversational.commerce.core.engine.provider.GeminiAdapter"/>
-    <bean id="ccOpenAiAdapter" class="com.conversational.commerce.core.engine.provider.OpenAiAdapter"/>
-    <bean id="ccAnthropicAdapter" class="com.conversational.commerce.core.engine.provider.AnthropicAdapter"/>
-    <util:list id="ccModelAdapters" value-type="com.conversational.commerce.core.engine.provider.ModelProviderAdapter"><ref bean="ccGeminiAdapter"/><ref bean="ccOpenAiAdapter"/><ref bean="ccAnthropicAdapter"/></util:list>
-    <bean id="ccModelRouter" class="com.conversational.commerce.core.engine.provider.DefaultModelRouter"/>
-
-    <!-- orchestrator -->
-    <bean id="ccPromptRepository" class="com.conversational.commerce.core.engine.orchestrator.PromptRepository"/>
-    <bean id="ccAuditSink" class="com.conversational.commerce.core.engine.orchestrator.Log4jAuditSink"/>
-    <bean id="ccProvenanceChecker" class="com.conversational.commerce.core.engine.orchestrator.ProvenanceChecker"/>
-    <bean id="ccHydrator" class="com.conversational.commerce.core.engine.orchestrator.Hydrator"/>
-    <bean id="ccToolRegistry" class="com.conversational.commerce.core.engine.orchestrator.ToolRegistry"/>
-    <bean id="ccWorkflowRegistry" class="com.conversational.commerce.core.engine.orchestrator.WorkflowRegistry"/>
-    <bean id="ccRelevanceJudge" class="com.conversational.commerce.core.engine.orchestrator.RelevanceJudge"/>
-    <bean id="ccComposer" class="com.conversational.commerce.core.engine.orchestrator.Composer"/>
-    <bean id="ccTranslateStep" class="com.conversational.commerce.core.engine.orchestrator.TranslateStep"/>
-    <bean id="ccDecisionValidator" class="com.conversational.commerce.core.engine.orchestrator.DecisionValidator"/>
-    <bean id="ccUsageCapService" class="com.conversational.commerce.core.engine.orchestrator.UsageCapService"/>
-    <bean id="ccInterestEventService" class="com.conversational.commerce.core.engine.orchestrator.InterestEventService"/>
-    <bean id="ccRetentionService" class="com.conversational.commerce.core.engine.orchestrator.RetentionService"/>
-    <bean id="ccWelcomeService" class="com.conversational.commerce.core.engine.orchestrator.WelcomeService"/>
-    <bean id="ccChatOrchestrationService" class="com.conversational.commerce.core.engine.orchestrator.DefaultChatOrchestrationService"/>
-    <bean id="ccBusinessRanker" class="com.conversational.commerce.core.engine.rules.BusinessRanker"/>
-
-    <!-- tools (PL-04): add a tool by adding a bean here and listing it in ccChatTools -->
-    <bean id="ccSearchProductsTool" class="com.conversational.commerce.core.engine.tools.SearchProductsTool"/>
-    <bean id="ccProductDetailsTool" class="com.conversational.commerce.core.engine.tools.ProductDetailsTool"/>
-    <bean id="ccComparisonTool" class="com.conversational.commerce.core.engine.tools.ComparisonTool"/>
-    <bean id="ccAlternativesTool" class="com.conversational.commerce.core.engine.tools.AlternativesTool"/>
-    <bean id="ccStockInfoTool" class="com.conversational.commerce.core.engine.tools.StockInfoTool"/>
-    <bean id="ccBudgetEligibleTool" class="com.conversational.commerce.core.engine.tools.BudgetEligibleTool"/>
-    <bean id="ccLatestOrderTool" class="com.conversational.commerce.core.engine.tools.OrderTools$LatestOrderTool"/>
-    <bean id="ccOrderByIdTool" class="com.conversational.commerce.core.engine.tools.OrderTools$OrderByIdTool"/>
-    <bean id="ccPendingOrdersTool" class="com.conversational.commerce.core.engine.tools.OrderTools$PendingOrdersTool"/>
-    <bean id="ccSearchOrdersTool" class="com.conversational.commerce.core.engine.tools.OrderTools$SearchOrdersTool"/>
-    <bean id="ccOrderTrackingTool" class="com.conversational.commerce.core.engine.tools.OrderTools$OrderTrackingTool"/>
-    <bean id="ccPurchaseHistoryTool" class="com.conversational.commerce.core.engine.tools.PurchaseHistoryTool"/>
-    <bean id="ccReplenishmentTool" class="com.conversational.commerce.core.engine.tools.ReplenishmentTool"/>
-    <bean id="ccPatternChangeTool" class="com.conversational.commerce.core.engine.tools.PatternChangeTool"/>
-    <bean id="ccComplementaryProductsTool" class="com.conversational.commerce.core.engine.tools.ComplementaryTools$ComplementaryProductsTool"/>
-    <bean id="ccBundleSuggestionsTool" class="com.conversational.commerce.core.engine.tools.ComplementaryTools$BundleSuggestionsTool"/>
-    <bean id="ccPlanBudgetTool" class="com.conversational.commerce.core.engine.tools.PlanBudgetTool"/>
-    <bean id="ccReviewListTool" class="com.conversational.commerce.core.engine.tools.ReviewListTool"/>
-    <bean id="ccQuickOrderValidateTool" class="com.conversational.commerce.core.engine.tools.QuickOrderValidateTool"/>
-    <bean id="ccFaqTool" class="com.conversational.commerce.core.engine.tools.FaqTool"/>
-    <util:list id="ccChatTools" value-type="com.conversational.commerce.core.engine.orchestrator.ChatTool"><ref bean="ccSearchProductsTool"/><ref bean="ccProductDetailsTool"/><ref bean="ccComparisonTool"/><ref bean="ccAlternativesTool"/><ref bean="ccStockInfoTool"/><ref bean="ccBudgetEligibleTool"/><ref bean="ccLatestOrderTool"/><ref bean="ccOrderByIdTool"/><ref bean="ccPendingOrdersTool"/><ref bean="ccSearchOrdersTool"/><ref bean="ccOrderTrackingTool"/><ref bean="ccPurchaseHistoryTool"/><ref bean="ccReplenishmentTool"/><ref bean="ccPatternChangeTool"/><ref bean="ccComplementaryProductsTool"/><ref bean="ccBundleSuggestionsTool"/><ref bean="ccPlanBudgetTool"/><ref bean="ccReviewListTool"/><ref bean="ccQuickOrderValidateTool"/><ref bean="ccFaqTool"/></util:list>
-
-    <!-- workflows -->
-    <bean id="ccNextOrderWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.NextOrderWorkflow"/>
-    <bean id="ccFindProductWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.FindProductWorkflow"/>
-    <bean id="ccQuickOrderWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.QuickOrderWorkflow"/>
-    <bean id="ccBudgetPlanWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.BudgetPlanWorkflow"/>
-    <bean id="ccOrderLookupWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.OrderLookupWorkflow"/>
-    <bean id="ccCompareWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.CompareWorkflow"/>
-    <bean id="ccBasketReviewWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.BasketReviewWorkflow"/>
-    <bean id="ccReorderWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.ReorderWorkflow"/>
-    <bean id="ccProductQaWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.ProductQaWorkflow"/>
-    <bean id="ccFaqWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.FaqWorkflow"/>
-    <bean id="ccOffTopicWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.StaticWorkflows$OffTopicWorkflow"/>
-    <bean id="ccUnsupportedWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.StaticWorkflows$UnsupportedWorkflow"/>
-    <bean id="ccClarifyWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.StaticWorkflows$ClarifyWorkflow"/>
-    <bean id="ccSwitchPackWorkflow" class="com.conversational.commerce.core.engine.orchestrator.workflow.StaticWorkflows$SwitchPackWorkflow"/>
-    <util:list id="ccWorkflowTemplates" value-type="com.conversational.commerce.core.engine.orchestrator.WorkflowTemplate"><ref bean="ccNextOrderWorkflow"/><ref bean="ccFindProductWorkflow"/><ref bean="ccQuickOrderWorkflow"/><ref bean="ccBudgetPlanWorkflow"/><ref bean="ccOrderLookupWorkflow"/><ref bean="ccCompareWorkflow"/><ref bean="ccBasketReviewWorkflow"/><ref bean="ccReorderWorkflow"/><ref bean="ccProductQaWorkflow"/><ref bean="ccFaqWorkflow"/><ref bean="ccOffTopicWorkflow"/><ref bean="ccUnsupportedWorkflow"/><ref bean="ccClarifyWorkflow"/><ref bean="ccSwitchPackWorkflow"/></util:list>
-
-    <!-- retention cron job (D08): see essentialdata-retention.impex for the CronJob and Trigger rows -->
-    <bean id="ccRetentionJob" class="com.conversational.commerce.core.job.CcRetentionJob" parent="abstractJobPerformable"/>
-
+    <bean id="ccDefaultChatService" class="com.conversational.commerce.core.service.impl.DefaultChatService"/>
+    <alias name="ccDefaultChatService" alias="ccChatService"/>
 </beans>

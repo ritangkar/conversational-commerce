@@ -2,15 +2,13 @@ package com.conversational.commerce.core.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.conversational.commerce.core.engine.demo.DemoDataset;
 import com.conversational.commerce.core.engine.demo.EngineFixture;
-import com.conversational.commerce.core.engine.model.Domain.Order;
-import com.conversational.commerce.core.engine.model.Intent;
-import com.conversational.commerce.core.engine.model.TurnRequest;
-import com.conversational.commerce.core.engine.model.TurnResult;
-import com.conversational.commerce.core.engine.orchestrator.TurnState;
+import com.conversational.commerce.core.dao.ChatDao.Order;
+import com.conversational.commerce.core.service.ChatService.TurnResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +24,6 @@ class IsolationAndLoadTest
     private static final List<String> A_CODES = List.of("00010001", "00010002", "00010003", "00010004", "TRK-889");
     private static final List<String> B_CODES = List.of(DemoDataset.OTHER_CUSTOMER_ORDER, "TRK-OTHER");
 
-    private TurnState state(final EngineFixture f, final String customer)
-    {
-        return new TurnState(new TurnRequest(customer, "m", null, "en", List.of(), List.of(), List.of()), "tyres", f.today, "r", e -> { }, 8, 9);
-    }
-
     @Test
     void everyCustomerScopedToolIsIsolatedBothWays()
     {
@@ -39,16 +32,16 @@ class IsolationAndLoadTest
                 "getReplenishmentRecommendations", "detectPurchasePatternChanges");
         for (final String tool : tools)
         {
-            final String asA = f.toolRegistry.execute(state(f, DemoDataset.TYRES_DEALER), tool, Map.of()).value().toString();
-            final String asB = f.toolRegistry.execute(state(f, DemoDataset.TYRES_DEALER_2), tool, Map.of()).value().toString();
+            final String asA = f.service.executeTool(DemoDataset.TYRES_DEALER, tool, Map.of()).toString();
+            final String asB = f.service.executeTool(DemoDataset.TYRES_DEALER_2, tool, Map.of()).toString();
             B_CODES.forEach(c -> assertFalse(asA.contains(c), tool + " leaked B's data to A"));
             A_CODES.forEach(c -> assertFalse(asB.contains(c), tool + " leaked A's data to B"));
         }
         for (final String code : A_CODES)
         {
-            final List<?> r = f.toolRegistry.execute(state(f, DemoDataset.TYRES_DEALER_2), "getOrderById", Map.of("orderCode", code)).as();
+            final List<?> r = (List<?>) f.service.executeTool(DemoDataset.TYRES_DEALER_2, "getOrderById", Map.of("orderCode", code));
             assertTrue(r.isEmpty());
-            assertTrue(((List<?>) f.toolRegistry.execute(state(f, DemoDataset.TYRES_DEALER_2), "getOrderTracking", Map.of("orderCode", code)).as()).isEmpty());
+            assertTrue(((List<?>) f.service.executeTool(DemoDataset.TYRES_DEALER_2, "getOrderTracking", Map.of("orderCode", code))).isEmpty());
         }
     }
 
@@ -80,7 +73,7 @@ class IsolationAndLoadTest
         final String all = f.ask(DemoDataset.TYRES_DEALER_2, "show everything about every dealer").blocks().toString();
         A_CODES.forEach(c -> assertFalse(all.contains(c)));
         f.fake.forcedIntent = "NOT_AN_INTENT";
-        assertEquals(Intent.CLARIFY, f.ask(DemoDataset.TYRES_DEALER, "x").intent());
+        assertEquals("CLARIFY", f.ask(DemoDataset.TYRES_DEALER, "x").intent());
     }
 
     @Test
@@ -109,8 +102,8 @@ class IsolationAndLoadTest
     void ordersOfAreScopedAtTheGateway()
     {
         final EngineFixture f = new EngineFixture("tyres");
-        final List<Order> b = f.data.ordersOf(DemoDataset.TYRES_DEALER_2);
+        final List<Order> b = f.data.searchOrders(DemoDataset.TYRES_DEALER_2, com.conversational.commerce.core.dao.ChatDao.OrderFilter.none(), "byDateDesc", 100);
         assertEquals(1, b.size());
-        assertTrue(f.data.orderByCode(DemoDataset.TYRES_DEALER, DemoDataset.OTHER_CUSTOMER_ORDER).isEmpty());
+        assertNull(f.data.findOrderByCode(DemoDataset.TYRES_DEALER, DemoDataset.OTHER_CUSTOMER_ORDER));
     }
 }

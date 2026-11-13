@@ -1,24 +1,19 @@
 package com.conversational.commerce.core.engine.demo;
 
-import com.conversational.commerce.core.engine.gateway.BusinessAttributeGateway;
-import com.conversational.commerce.core.engine.gateway.CatalogGateway;
-import com.conversational.commerce.core.engine.gateway.CoPurchaseGateway;
-import com.conversational.commerce.core.engine.gateway.FaqGateway;
-import com.conversational.commerce.core.engine.gateway.InterestEventSink;
-import com.conversational.commerce.core.engine.gateway.OrderGateway;
-import com.conversational.commerce.core.engine.gateway.PriceGateway;
-import com.conversational.commerce.core.engine.gateway.StockGateway;
-import com.conversational.commerce.core.engine.gateway.UsageCounterStore;
-import com.conversational.commerce.core.engine.model.Domain.BusinessAttribute;
-import com.conversational.commerce.core.engine.model.Domain.EventType;
-import com.conversational.commerce.core.engine.model.Domain.Faq;
-import com.conversational.commerce.core.engine.model.Domain.Order;
-import com.conversational.commerce.core.engine.model.Domain.OrderLine;
-import com.conversational.commerce.core.engine.model.Domain.OrderStatus;
-import com.conversational.commerce.core.engine.model.Domain.Product;
-import com.conversational.commerce.core.engine.model.Domain.StockInfo;
+import com.conversational.commerce.core.dao.ChatDao;
+import com.conversational.commerce.core.dao.ChatDao.BusinessAttribute;
+import com.conversational.commerce.core.dao.ChatDao.Faq;
+import com.conversational.commerce.core.dao.ChatDao.Order;
+import com.conversational.commerce.core.dao.ChatDao.OrderFilter;
+import com.conversational.commerce.core.dao.ChatDao.OrderLine;
+import com.conversational.commerce.core.dao.ChatDao.OrderStatus;
+import com.conversational.commerce.core.dao.ChatDao.Product;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,8 +24,7 @@ import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Synthetic dummy data for SC-01..SC-10 as in-memory gateways (tests and local demo only). Nothing here is real. */
-public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, StockGateway, FaqGateway, CoPurchaseGateway,
-        BusinessAttributeGateway, InterestEventSink, UsageCounterStore
+public class DemoDataset implements ChatDao
 {
     public static final String TYRES_DEALER = "dealer-tyres";
     public static final String TYRES_DEALER_2 = "dealer-tyres-2";
@@ -44,7 +38,22 @@ public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, 
     public static final String CANARY_EMAIL = "canary.dealer@example.invalid";
     public static final String OTHER_CUSTOMER_ORDER = "99887766";
 
-    public record Event(String customerId, EventType type, String reference, String pack)
+    /** Mutable configuration layers: Backoffice entries win over properties, as in production. */
+    public static class MapConfig
+    {
+        final Map<String, String> values = new ConcurrentHashMap<>();
+
+        public MapConfig put(final String key, final String value)
+        {
+            values.put(key, value);
+            return this;
+        }
+    }
+
+    public final MapConfig backoffice = new MapConfig();
+    public final MapConfig properties = new MapConfig();
+
+    public record Event(String customerId, String type, String reference, String pack)
     {
     }
 
@@ -198,19 +207,28 @@ public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, 
         }
     }
 
-    // CatalogGateway
+    // ChatDao: configuration
     @Override
-    public List<Product> findCandidates(final String pack, final List<String> keywords, final String categoryCode,
+    public String findProperty(final String key)
+    {
+        return properties.values.get(key);
+    }
+
+    @Override
+    public String findBackofficeValue(final String key)
+    {
+        return backoffice.values.get(key);
+    }
+
+    // ChatDao: catalogue and prices
+    @Override
+    public List<Product> findProducts(final String pack, final List<String> keywords, final String categoryCode,
             final Map<String, String> filters, final int limit)
     {
         final Map<Product, Integer> scored = new LinkedHashMap<>();
         for (final Product p : products)
         {
-            if (!p.pack().equals(pack))
-            {
-                continue;
-            }
-            if (categoryCode != null && !categoryCode.equals(p.category()))
+            if (!p.pack().equals(pack) || categoryCode != null && !categoryCode.equals(p.category()))
             {
                 continue;
             }
@@ -238,78 +256,85 @@ public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, 
             }
         }
         return scored.entrySet().stream()
-                .sorted((a, b) -> b.getValue() != a.getValue().intValue() ? b.getValue() - a.getValue()
-                        : a.getKey().code().compareTo(b.getKey().code()))
+                .sorted((a, b) -> b.getValue() != a.getValue().intValue() ? b.getValue() - a.getValue() : a.getKey().code().compareTo(b.getKey().code()))
                 .map(Map.Entry::getKey).limit(limit).toList();
     }
 
     @Override
-    public Optional<Product> byCode(final String pack, final String code)
+    public Product findProduct(final String pack, final String code)
     {
-        return products.stream().filter(p -> p.pack().equals(pack) && p.code().equals(code)).findFirst();
+        return products.stream().filter(p -> p.pack().equals(pack) && p.code().equals(code)).findFirst().orElse(null);
     }
 
-    // PriceGateway
     @Override
-    public OptionalLong unitPriceMinor(final String customerId, final String productCode)
+    public OptionalLong findUnitPriceMinor(final String customerId, final String productCode)
     {
         final Long p = prices.get(productCode);
         return p == null ? OptionalLong.empty() : OptionalLong.of(p);
     }
 
     @Override
-    public String currency()
+    public String findCurrency()
     {
         return "INR";
     }
 
-    // OrderGateway: customer isolation is enforced here, as the SAP DAO filters by customer in the query
+    // ChatDao: orders. Customer isolation is enforced here, as the SAP DAO filters by customer in the query.
     @Override
-    public List<Order> ordersOf(final String customerId)
+    public List<Order> searchOrders(final String customerId, final OrderFilter f, final String sortCode, final int limit)
     {
-        return orders.stream().filter(o -> o.customerId().equals(customerId)).toList();
+        return orders.stream().filter(o -> o.customerId().equals(customerId))
+                .filter(o -> f.statuses() == null || f.statuses().contains(o.status()))
+                .filter(o -> f.minTotalMinor() == null || o.totalMinor() >= f.minTotalMinor())
+                .filter(o -> f.maxTotalMinor() == null || o.totalMinor() <= f.maxTotalMinor())
+                .filter(o -> f.fromDate() == null || !o.placedOn().isBefore(f.fromDate()))
+                .filter(o -> f.toDate() == null || o.placedOn().isBefore(f.toDate().plusDays(1))) // toDate exclusive next day
+                .sorted("byDateAsc".equals(sortCode) ? Comparator.comparing(Order::placedOn) : Comparator.comparing(Order::placedOn).reversed())
+                .limit(limit).toList();
     }
 
     @Override
-    public Optional<Order> orderByCode(final String customerId, final String code)
+    public Order findOrderByCode(final String customerId, final String code)
     {
-        return orders.stream().filter(o -> o.customerId().equals(customerId) && o.code().equals(code)).findFirst();
+        return orders.stream().filter(o -> o.customerId().equals(customerId) && o.code().equals(code)).findFirst().orElse(null);
     }
 
-    // StockGateway
+    // ChatDao: aggregates and content
     @Override
-    public StockInfo stockOf(final String productCode)
-    {
-        final int units = Math.abs(productCode.hashCode()) % 200;
-        return new StockInfo(productCode, units, true, units > 20 ? "In stock (demo)" : "Low stock (demo)");
-    }
-
-    @Override
-    public List<Faq> approvedFaqs(final String pack)
-    {
-        return faqs.stream().filter(f -> f.pack().equals(pack)).toList();
-    }
-
-    @Override
-    public Map<String, Integer> pairCounts(final String pack, final String productCode)
+    public Map<String, Integer> findCoPurchaseCounts(final String pack, final String productCode)
     {
         return pairs.getOrDefault(productCode, Map.of());
     }
 
     @Override
-    public Optional<BusinessAttribute> attributeOf(final String productCode)
+    public BusinessAttribute findBusinessAttribute(final String productCode)
     {
-        return Optional.ofNullable(business.get(productCode));
+        return business.get(productCode);
     }
 
     @Override
-    public void write(final String customerId, final EventType type, final String reference, final String pack)
+    public List<Faq> findFaqs(final String pack)
     {
-        events.add(new Event(customerId, type, reference, pack));
+        return faqs.stream().filter(f -> f.pack().equals(pack)).toList();
+    }
+
+    // ChatDao: writes and counters
+    @Override
+    public void saveInterestEvent(final String customerId, final String eventType, final String reference, final String pack)
+    {
+        events.add(new Event(customerId, eventType, reference, pack));
+    }
+
+    public final List<String> feedback = java.util.Collections.synchronizedList(new ArrayList<>());
+
+    @Override
+    public void saveFeedback(final String responseId, final String rating, final String intent, final String toolsUsed, final String auditRef)
+    {
+        feedback.add(responseId + "|" + rating + "|" + intent + "|" + toolsUsed + "|" + auditRef);
     }
 
     @Override
-    public long[] add(final String customerId, final String periodKey, final int messages, final int tokens)
+    public long[] incrementUsage(final String customerId, final String periodKey, final int messages, final int tokens)
     {
         final long[] c = counters.computeIfAbsent(customerId + "|" + periodKey, k -> new long[2]);
         synchronized (c)
@@ -321,8 +346,32 @@ public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, 
     }
 
     @Override
-    public long[] get(final String customerId, final String periodKey)
+    public long[] findUsage(final String customerId, final String periodKey)
     {
         return counters.getOrDefault(customerId + "|" + periodKey, new long[2]).clone();
+    }
+
+    // ChatDao: retention (the demo keeps nothing old, so these only count calls)
+    public final AtomicInteger purgeCalls = new AtomicInteger();
+
+    @Override
+    public int purgeInterestEvents(final Date cutoff, final int batchSize)
+    {
+        purgeCalls.incrementAndGet();
+        return 0;
+    }
+
+    @Override
+    public int purgeFeedback(final Date cutoff, final int batchSize)
+    {
+        purgeCalls.incrementAndGet();
+        return 0;
+    }
+
+    @Override
+    public int purgeUsageCounters(final String periodKeyBefore, final int batchSize)
+    {
+        purgeCalls.incrementAndGet();
+        return 0;
     }
 }

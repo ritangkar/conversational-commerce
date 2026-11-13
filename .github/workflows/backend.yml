@@ -17,6 +17,6 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           # SAP Commerce binaries are licensed and not in this repo (docs/assumptions.md AS-09).
-          # dao/, platform/, job/, ccfacades, ccocc, ccsampledata are NOT compiled by CI until a platform is provided
+          # ChatDaoImpl, ccfacades, ccocc, ccsampledata are NOT compiled by CI until a platform is provided
           # (self-hosted runner or private artifact). Replace this step with the ant build and platform tests.
           echo "::notice::SAP-bound modules are not built in CI yet."

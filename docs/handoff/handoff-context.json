@@ -28,7 +28,13 @@
     "package_base": "com.conversational.commerce",
     "bean_prefix": "cc",
     "item_prefix": "CC",
-    "extensions": ["cccore", "ccfacades", "ccocc", "ccbackoffice", "ccsampledata"],
+    "extensions": [
+      "cccore",
+      "ccfacades",
+      "ccocc",
+      "ccbackoffice",
+      "ccsampledata"
+    ],
     "assumed_versions_owner_to_confirm": "SAP Commerce 2211-jdk21 (Jakarta, Spring 6), Angular 19, Node 22 (A12). Names cc/CC/cccore... derived (N1)."
   },
   "protected_decisions_summary": "D01 public repo/no secrets; D02 local demo seeded dummy data; D03 Add to Cart = labelled placeholder list, AI never orders; D04 dealer persona; D05 search by code/description/use case/constraints; D06 deterministic backend search, AI extracts/judges, price/stock in backend; D07 session-only memory; D08 interest events in own table, on by default with notice, toggle, 90-day retention; D09 full-page + welcome panel; D10 order tracking from Commerce-held data only; D11 simple rule-based replenishment; D12 pattern change detection; D13 every capability toggleable (fail-closed for PL-01/03/04/05); D15 cross-sell deterministic, AI explains; D16 FAQ only approved content; D17 multilingual translate in/process English/translate out, identifiers never translated; D18 provider/model per task (Gemini, Anthropic, OpenAI); D19 keys only in secure properties; D21 comparison/compatibility; D22 reorder; D23 ten scenarios; D24 business controls, margin never to LLM/customers; D25 quantity recs/basket optimisation; D26 AI returns IDs only, backend hydrates; D27 labelled demo stock with live-stock hook; D28 off-topic redirected, unsupported declined; D29 live steps + streamed answer; D30 thumbs metadata only; D31 contact account manager text; D32 five packs, generators in repo, live switch, coexist; D33 own orders only; D34 own history only; D35 quick order, budget planner, substitution, order search, why-this, editable list; D36 <=10 s target, usage caps; D37 owner conventions binding, FUTURE SCOPE comments. Owner-approved: A1 fail-closed toggles, A2 synthetic-data-only guard, A3 NOT adopted, A4 pack dealers + all-packs dealer, A5 ROLE_CUSTOMERGROUP only with userId binding, A7 events/feedback separate tables, A9 AI suggests enum event types only, A10 margin separate item type, A11 browser-held list and context, A13 validate-then-reveal streaming, A14 audit as structured logs. Pending: N3 welcome caching (not implemented), N4 spike fallbacks changing protected decisions, N8 PwC theme (implemented as designed, flagged).",
@@ -71,14 +77,28 @@
       "storefront/chat-feature": "src/lib/core (pure TS: models, sse-frame-parser, chat-api, chat-state, session-persistence, context-envelope, terminology), src/lib/ui (standalone components, ChatStore signals), src/lib/spartacus (auth adapter + module, UNVERIFIED), src/styles (tokens.json -> _tokens.scss)",
       "tools": "packgen (generate.py, manifests/*.json 5 packs, schema, test_generate.py), beangen (beans.json single spec -> both beans XML), ci (secret-scan, selftest, contrast.py, tokens.py), handoff"
     },
-    "stream_events": ["step_started", "step_completed", "block", "text_delta (stepId carries the block id)", "done (responseId, trace)", "error"],
-    "endpoints": ["POST /chat", "POST /chat/stream (SseEmitter, heartbeat comment hb, bounded executor, SessionPropagator)", "GET /chat/welcome", "GET /chat/config", "POST /chat/feedback", "POST /chat/purchase-list/validate"],
+    "stream_events": [
+      "step_started",
+      "step_completed",
+      "block",
+      "text_delta (stepId carries the block id)",
+      "done (responseId, trace)",
+      "error"
+    ],
+    "endpoints": [
+      "POST /chat",
+      "POST /chat/stream (SseEmitter, heartbeat comment hb, bounded executor, SessionPropagator)",
+      "GET /chat/welcome",
+      "GET /chat/config",
+      "POST /chat/feedback",
+      "POST /chat/purchase-list/validate"
+    ],
     "spring_naming": "Own beans are ccXxx; @Resource(name=\"ccXxx\") on own types (a plain @Resource named configurationService would clash with the platform bean). List beans: ccConfigSources, ccSanitisationRules, ccModelAdapters, ccChatTools, ccWorkflowTemplates. Gateways use alias pattern ccDefaultXGateway + alias ccXGateway for client override.",
     "config": "Layers highest first: Backoffice entries (BackofficeConfigSource), then properties/env (PropertiesConfigSource). Short TTL cache cc.config.cacheTtlSeconds (default 10). Keys: capability.<ID>.enabled for 43 IDs, orchestration.*, replenishment.*, patternChange.*, budget.candidateCap, crossSell.minSupport, bundle.minSupport, privacy.interestEvents.*, usage.cap.*, route.<task>.provider/model/fallback (EMPTY on purpose until model IDs are verified), pack.<p>.categories/searchFields/attributes/terminology/samplePrompts/themeTokens. cc.activePack and cc.syntheticDataOnly come from the CCConfiguration row."
   },
   "status": {
     "verified_in_session": [
-      "Engine: 49 JUnit 5 tests pass (backend/cccore/tools-run.sh): SC-01..SC-10 on fake provider, canary leaks, isolation both directions, injection corpus, 400 concurrent turns, budget planner property test (2,000 cases), config fail-closed, TTL, usage caps, audit, provider contract tests on synthetic fixtures, router fallback and free-tier guard",
+      "Service: 55 JUnit 5 tests pass (backend/cccore/tools-run.sh): SC-01..SC-10 on a fake OpenAI-shaped transport, canary leaks, isolation both directions, injection corpus, 400 concurrent turns, budget planner property test, config fail-closed, TTL, usage caps, audit, provider contract tests on synthetic fixtures, router fallback and free-tier guard, feedback, purchase list, retention",
       "Packgen: 7 Python tests (byte-identical regeneration, 43 toggles, fixtures, relative dates, example.invalid emails)",
       "Storefront core: 13 vitest tests incl. real local HTTP SSE (incremental delivery, bearer, fallback on 500/no-done/silence, abort)",
       "Angular 19 components compile under strictTemplates with ngc (against local Spartacus type stubs)",
@@ -112,16 +132,46 @@
     ]
   },
   "next_steps_on_sap_machine": [
-    {"n": 1, "do": "Clone the repo (or restore bundles). Create the five extensions in a SAP Commerce 2211 workspace: generate ccocc from the yocc template, then merge in this repo's ccocc sources and ccocc-beans.xml. Add extensions to localextensions.xml in dependency order cccore, ccfacades, ccocc, ccbackoffice, ccsampledata. Run ant clean all. Paste compile errors to Claude; fix imports against the REAL platform and the owner's real controller file."},
-    {"n": 2, "do": "Replace docs/examples transcriptions with the real files if available and compare: imports, bean XML, items.xml, DAO (buildFilterClause/createSortQuery/PagedFlexibleSearchService use), test samples. Then align code and update docs/assumptions.md. Ask the owner for the items in docs/examples/MISSING_EXAMPLES.md."},
-    {"n": 3, "do": "ant initialize; check items.xml deploys (typecodes 14100-14105 must not clash), generated model constants match the DAO code, Backoffice shows the types, ccbusinessmanagergroup restriction works."},
-    {"n": 4, "do": "Load essential data then packs through the ccsampledata.pack.<code> system-setup options on a site with cc.syntheticDataOnly=true. Fix ImpEx errors (S5). Check SC fixtures exist and the demo dealers can log in (passwords are NOT in ImpEx; set via local.properties-driven step you add)."},
-    {"n": 5, "do": "Run spike S1: POST /chat/stream locally and behind the real ingress; check the SseEmitter works through OCC filters, heartbeat, cancel, SessionPropagator (prices must be the customer's). Run S2: DataMapper with fields on chat DTOs/events."},
-    {"n": 6, "do": "HTTP tests with customer tokens: another userId -> 403; stream arrives incrementally; /chat returns the same blocks. Add integration tests as customer A vs B for every DAO (S7) following the owner's test sample."},
-    {"n": 7, "do": "S3: verify current provider docs and model IDs, set route.<task>.* in Backoffice, put keys under cc.provider.key.<alias> in local.properties only. Run 50 schema-constrained decisions per provider; fix adapter shapes; record in docs/verification-log.md and docs/spikes/S3.md. Then S4 on a paid tier, S8 translation."},
-    {"n": 8, "do": "Frontend: create or use the Spartacus storefront, register the lazy feature with AuthGuard, exclude the route from SSR, provide CC_AUTH and CC_CONFIG, verify logout clears sessionStorage. Add component tests, axe, e2e SC-01, keyboard walk-through, reduced-motion, screenshot baseline (not done)."},
-    {"n": 9, "do": "Close the gaps in known_functional_gaps; add scenario tests for PD-03, PA-07, CI-02, KN-01; implement partial blocks if the owner wants them."},
-    {"n": 10, "do": "Wire a CI job that builds the SAP modules (self-hosted runner or private artifact). Keep docs/owner-approvals.md current; never apply a pending approval."}
+    {
+      "n": 1,
+      "do": "Clone the repo (or restore bundles). Create the five extensions in a SAP Commerce 2211 workspace: generate ccocc from the yocc template, then merge in this repo's ccocc sources and ccocc-beans.xml. Add extensions to localextensions.xml in dependency order cccore, ccfacades, ccocc, ccbackoffice, ccsampledata. Run ant clean all. Paste compile errors to Claude; fix imports against the REAL platform and the owner's real controller file."
+    },
+    {
+      "n": 2,
+      "do": "Replace docs/examples transcriptions with the real files if available and compare: imports, bean XML, items.xml, DAO (buildFilterClause/createSortQuery/PagedFlexibleSearchService use), test samples. Then align code and update docs/assumptions.md. Ask the owner for the items in docs/examples/MISSING_EXAMPLES.md."
+    },
+    {
+      "n": 3,
+      "do": "ant initialize; check items.xml deploys (typecodes 14100-14105 must not clash), generated model constants match the DAO code, Backoffice shows the types, ccbusinessmanagergroup restriction works."
+    },
+    {
+      "n": 4,
+      "do": "Load essential data then packs through the ccsampledata.pack.<code> system-setup options on a site with cc.syntheticDataOnly=true. Fix ImpEx errors (S5). Check SC fixtures exist and the demo dealers can log in (passwords are NOT in ImpEx; set via local.properties-driven step you add)."
+    },
+    {
+      "n": 5,
+      "do": "Run spike S1: POST /chat/stream locally and behind the real ingress; check the SseEmitter works through OCC filters, heartbeat, cancel, SessionPropagator (prices must be the customer's). Run S2: DataMapper with fields on chat DTOs/events."
+    },
+    {
+      "n": 6,
+      "do": "HTTP tests with customer tokens: another userId -> 403; stream arrives incrementally; /chat returns the same blocks. Add integration tests as customer A vs B for every DAO (S7) following the owner's test sample."
+    },
+    {
+      "n": 7,
+      "do": "S3: verify current provider docs and model IDs, set route.<task>.* in Backoffice, put keys under cc.provider.key.<alias> in local.properties only. Run 50 schema-constrained decisions per provider; fix adapter shapes; record in docs/verification-log.md and docs/spikes/S3.md. Then S4 on a paid tier, S8 translation."
+    },
+    {
+      "n": 8,
+      "do": "Frontend: create or use the Spartacus storefront, register the lazy feature with AuthGuard, exclude the route from SSR, provide CC_AUTH and CC_CONFIG, verify logout clears sessionStorage. Add component tests, axe, e2e SC-01, keyboard walk-through, reduced-motion, screenshot baseline (not done)."
+    },
+    {
+      "n": 9,
+      "do": "Close the gaps in known_functional_gaps; add scenario tests for PD-03, PA-07, CI-02, KN-01; implement partial blocks if the owner wants them."
+    },
+    {
+      "n": 10,
+      "do": "Wire a CI job that builds the SAP modules (self-hosted runner or private artifact). Keep docs/owner-approvals.md current; never apply a pending approval."
+    }
   ],
   "owner_needs": [
     "SAP platform build environment (B1)",
@@ -148,5 +198,34 @@
     "Hex colours are not confirmed PwC values; no PwC logo/font is bundled.",
     "In this environment the git remote main is the only branch; the session instruction said to develop on a ccr- branch but the user explicitly asked for main."
   ],
-  "read_first_in_repo": ["README.md", "docs/capability-status.md", "docs/assumptions.md", "docs/owner-approvals.md", "docs/verification-log.md", "docs/architecture.md", "docs/extension-guide.md", "docs/convention-digest.md", "docs/design/UC1_Stage3_Handoff.json"]
+  "read_first_in_repo": [
+    "README.md",
+    "docs/capability-status.md",
+    "docs/assumptions.md",
+    "docs/owner-approvals.md",
+    "docs/verification-log.md",
+    "docs/architecture.md",
+    "docs/extension-guide.md",
+    "docs/convention-digest.md",
+    "docs/design/UC1_Stage3_Handoff.json"
+  ],
+  "consolidation_update": {
+    "date": "2026-11-13",
+    "request": "Owner asked for only: controller, facade, facade impl, service, service impl, dao, dao impl; all backend functionality inside them; no many backend files.",
+    "backend_java_files": {
+      "controller": "backend/ccocc/src/com/conversational/commerce/occ/controllers/ChatController.java",
+      "facade": "backend/ccfacades/src/com/conversational/commerce/facades/chat/ChatFacade.java",
+      "facade_impl": ".../chat/impl/DefaultChatFacade.java",
+      "service": "backend/cccore/src/com/conversational/commerce/core/service/ChatService.java (also holds all public value records and the 43 capability ids)",
+      "service_impl": ".../service/impl/DefaultChatService.java (~2,700 lines: config, audit, rules, sanitiser, provider routing, 20 tools, 14 workflows, orchestration, caps, interest events, welcome, feedback, purchase list, retention)",
+      "dao": "backend/cccore/src/com/conversational/commerce/core/dao/ChatDao.java",
+      "dao_impl": ".../dao/impl/ChatDaoImpl.java (SAP-bound, NOT compiled)",
+      "extra_sample_only": "backend/ccsampledata/src/com/conversational/commerce/sampledata/ChatSampleDataSetup.java"
+    },
+    "removed": "All former engine/*, platform/*, job/*, constants/*, 9 DAO pairs, facade assembler and four extra facades, four extra controllers, UserBindingGuard, SessionPropagator, ccsampledata loader classes. They remain in git history before this change.",
+    "bean_names": "ccChatDao (alias of ccDefaultChatDao), ccChatService (alias of ccDefaultChatService), ccChatFacade, ccChatSampleDataSetup, ccChatStreamExecutor, ccChatStreamScheduler",
+    "tests": "55 JUnit tests via backend/cccore/tools-run.sh; test wiring: testsrc/.../demo/{DemoDataset (implements ChatDao), FakeModelTransport (OpenAI-shaped), EngineFixture}",
+    "trade_offs": "PL-08 SPIs replaced by editing/overriding one bean; ChatDao returns value types; single large file. Recorded as AS-20..AS-22 and owner-approvals B6.",
+    "supersedes": "Any text elsewhere in this JSON that names engine classes (ToolRegistry, ChatTool, WorkflowTemplate, gateways, sanitiser classes, DAO pairs, platform gateways) describes the pre-consolidation design."
+  }
 }

@@ -6,6 +6,5 @@
            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
        default-lazy-init="true">
     <context:annotation-config/>
-    <bean id="ccSampleOrderLoader" class="com.conversational.commerce.sampledata.setup.SampleOrderLoader"/>
-    <bean id="ccSampleDataSystemSetup" class="com.conversational.commerce.sampledata.setup.CcSampleDataSystemSetup"/>
+    <bean id="ccChatSampleDataSetup" class="com.conversational.commerce.sampledata.ChatSampleDataSetup"/>
 </beans>

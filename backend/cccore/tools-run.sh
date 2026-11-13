@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Compiles the platform-independent engine against local stubs and runs its JUnit tests. No SAP Commerce needed.
-# Only src/.../engine is compiled: dao/, platform/ and job/ need a real SAP platform (they are NOT verified here).
+# Compiles the service and the ChatDao interface (platform-independent). dao/impl/ChatDaoImpl needs a real SAP platform and is NOT built here.
 # Libraries are downloaded once into backend/cccore/.local-libs (gitignored). Usage: backend/cccore/tools-run.sh
 set -eu
 cd "$(dirname "$0")"
@@ -16,7 +16,7 @@ get jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1
 get org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
 CP=$(ls "$LIB"/*.jar | tr '\n' ':')
 rm -rf build-local/classes && mkdir -p build-local/classes
-javac -Xlint:-options -d build-local/classes -cp "$CP" $(find src/com/conversational/commerce/core/engine teststubs testsrc -name '*.java')
+javac -Xlint:-options -d build-local/classes -cp "$CP" src/com/conversational/commerce/core/dao/ChatDao.java $(find src/com/conversational/commerce/core/service teststubs testsrc -name '*.java')
 cp -r resources/cccore build-local/classes/
 java -jar "$LIB/junit-platform-console-standalone-1.10.2.jar" execute -cp "build-local/classes:$CP" --scan-classpath build-local/classes \
   --disable-banner --details=summary "$@"

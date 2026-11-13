@@ -1,27 +1,25 @@
 # Extension guide
 
-Every extension point is a Spring bean of an SPI type. Core code is not edited. Examples use the engine in `backend/cccore/src/.../core/engine`; tests use `testsrc/.../demo/EngineFixture` as a wiring reference.
+The backend is deliberately small: one service and one DAO. Extend by editing `DefaultChatService` / `ChatDaoImpl`, or by replacing a bean with a subclass through the Spring alias (`ccDefaultChatService` aliased as `ccChatService`, `ccDefaultChatDao` as `ccChatDao`). Tests use `backend/cccore/testsrc/.../demo/EngineFixture` (in-memory `ChatDao` + fake OpenAI-shaped transport) and run with `backend/cccore/tools-run.sh`.
 
-## Add a tool (about 10 minutes)
-1. Implement `ChatTool` (`name()`, `capabilityId()`, `execute(TurnState, Map<String,Object>)`). Read the customer from `state.customerId`, never from `args`. Validate every argument with `ToolArgs` (type, size, range). Return `ToolResult.of(value, codes, TraceStep...)`: `codes` feed the provenance set, `TraceStep` is whitelisted why-this metadata.
-2. A tool must not write data and must not return prices or margin to anything that reaches a model.
-3. Register the bean in your extension's Spring file and add it to the `ccChatTools` list (override the list bean or add a `ListMergeDirective`).
-4. Add the capability toggle `capability.<ID>.enabled` (an entry in your essential data) if it needs its own switch.
-5. Test: add it to `EngineFixture` (`tools.add(...)`) and call `toolRegistry.execute(state, "yourTool", args)`; assert customer isolation as customer A vs B, as `IsolationAndLoadTest` does.
+## Add a tool
+1. Add the name and capability to the `TOOLS` map and a `case` in `runTool` (section "tools").
+2. Write `private ToolResult toolYourThing(TurnState s, Map<String,Object> args)`. Read the customer from `s.customerId`, never from `args`. Validate every argument with `argStrings/argString/argNumber/argMap` (type, size, range). Return `new ToolResult(value, codes, trace)`: `codes` feed the provenance set, `trace` is whitelisted why-this metadata. A tool must not write data or return prices/margin to anything a model sees.
+3. Need new data? Add a method to `ChatDao`, implement it in `ChatDaoImpl` (named parameters, customer in the query) and in the test `DemoDataset`.
+4. Seed `capability.<ID>.enabled` in `tools/packgen/generate.py` if it needs a new capability ID (and add it to `ChatService.CAPABILITIES`).
+5. Test as customer A and B (see `IsolationAndLoadTest`) and call `service.executeTool("customer", "yourThing", args)`.
 
-Sample: `SearchProductsTool` is the smallest complete tool.
-
-## Add a workflow
-Implement `WorkflowTemplate`: `intent()` and `run(TurnState, Decision)` returning `Output(blocks, templateKey, facts, slots, table, suggestedActions, interestCode)`. Call tools only through `tool(state, labelKey, name, args)` so steps are streamed and limits apply; use `toolRegistry.executeParallel` for independent calls. Add a `TemplateTexts` key for the fallback text with `{{S:slot}}` placeholders. New intents also need an entry in `Intent`, the `decision.v1.json` enum and the `decide.v1.txt` prompt.
+## Add a workflow (intent)
+Add the intent to the `Intent` enum, the `decision.v1.json` schema enum and `decide.v1.txt`; add a `case` in `runWorkflow` and a `wfYourIntent(TurnState, Decision)` returning `Output(blocks, templateKey, facts, slots, table, actions)`. Call tools through `step(s, labelKey, tool, args)` so steps stream and limits apply; use `runParallel` for independent calls. Add the fallback sentence to `TEMPLATES` with `{{S:slot}}` placeholders.
 
 ## Add a rule
-Rules are plain classes in `engine/rules` with no platform imports and no injection. Pass configuration values as method arguments. Add a unit test (see `RulesTest`; use a property test if the rule has an invariant, as the budget planner does).
+Rules are `public static` methods with record results (section "rules") and no platform dependency. Pass configuration values as arguments. Add a unit test in `RulesTest` (a property test if the rule has an invariant, as `planBudget` does).
 
-## Add or replace a gateway
-Gateways (`CatalogGateway`, `PriceGateway`, `OrderGateway`, `StockGateway`, `FaqGateway`, `CoPurchaseGateway`, `BusinessAttributeGateway`) are overridden by Spring alias: define your bean and `<alias name="yourBean" alias="ccOrderGateway"/>`. Keep the customer filter in the query. Hooks marked `// FUTURE SCOPE:` show where unit-level access, live stock, a real cart and carrier tracking plug in.
+## Replace data access (gateway-style override)
+Subclass `ChatDaoImpl` (or implement `ChatDao`) and re-point the alias: `<alias name="yourDao" alias="ccChatDao"/>`. Keep the customer filter in every customer-scoped query. Hooks marked `// FUTURE SCOPE:` show where unit-level access, live stock, a real cart and carrier tracking plug in.
 
 ## Add a provider
-Extend `AbstractHttpAdapter` (`endpoint`, `headers`, `buildBody`, `extractContent`, `extractUsage`), register it in `ccModelAdapters`, add a contract test with a recorded synthetic fixture (see `ProviderContractTest`). Never log a body. Verify request shape and model IDs against the provider's current documentation and record it in `docs/verification-log.md`.
+Add a `case` to the two switches in `callProvider` (request shape, response parse), a contract test with a recorded synthetic fixture (`ProviderContractTest`, `testsrc/fixtures/providers`). Never log a body. Verify the shape and model IDs against the provider's current documentation and record it in `docs/verification-log.md`. Model IDs and routes are configuration (`route.<task>.*`), never code.
 
 ## Add a language or pack
-Language: no code; add `TRANSLATE` coverage and run spike S8. Pack: add `tools/packgen/manifests/<pack>.json`, run `python3 tools/packgen/generate.py`, commit the generated files.
+Language: no code; run spike S8. Pack: add `tools/packgen/manifests/<pack>.json`, run `python3 tools/packgen/generate.py`, commit the generated files.

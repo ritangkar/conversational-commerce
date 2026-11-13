@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Backend consolidated** (owner request): controller, facade + impl, service + impl, DAO + impl only (170 Java files down to 8). 55 tests pass against the new service. Trade-offs in `docs/owner-approvals.md` B6.
 - Seed: design inputs and owner examples.
 - Stages 0-1: convention digest, assumptions, approvals, guardrails, secret scanning.
 - Engine: configuration with fail-closed rules, rules (replenishment, pattern change, budget planner, co-purchase, basket review, quick order, business ranker), sanitiser, three provider adapters and router, 20 tools, 14 workflows, orchestrator, audit, usage caps, interest events, retention, welcome service. 49 tests.

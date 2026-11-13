@@ -5,13 +5,6 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
        default-lazy-init="true">
-
     <context:annotation-config/>
-
-    <bean id="ccChatDataAssembler" class="com.conversational.commerce.facades.chat.impl.ChatDataAssembler"/>
     <bean id="ccChatFacade" class="com.conversational.commerce.facades.chat.impl.DefaultChatFacade"/>
-    <bean id="ccWelcomeFacade" class="com.conversational.commerce.facades.chat.impl.DefaultWelcomeFacade"/>
-    <bean id="ccFeedbackFacade" class="com.conversational.commerce.facades.chat.impl.DefaultFeedbackFacade"/>
-    <bean id="ccPurchaseListFacade" class="com.conversational.commerce.facades.chat.impl.DefaultPurchaseListFacade"/>
-    <bean id="ccChatConfigFacade" class="com.conversational.commerce.facades.chat.impl.DefaultChatConfigFacade"/>
 </beans>

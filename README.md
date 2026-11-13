@@ -8,14 +8,17 @@ All code is written, but only part of it could be run in the environment that pr
 
 | Part | State |
 | --- | --- |
-| Engine (config, rules, sanitiser, adapters, router, tools, workflows, orchestrator, audit, caps, events) | **Built and tested**: 49 JUnit tests pass on dummy data, including SC-01..SC-10, canary leak, isolation, injection, property and load tests. Run `backend/cccore/tools-run.sh` (needs Java 21 and network for jars) |
-| SAP-bound code (items, DAOs, gateways, facades, OCC, Backoffice, sample-data loader, Spring XML) | **Written, not compiled or run.** Imports and wiring are UNVERIFIED; see `docs/assumptions.md` and `docs/verification-log.md` |
+| Backend service (`DefaultChatService` + `ChatDao` interface): config, rules, sanitiser, provider routing, tools, workflows, orchestration, audit, caps, events | **Built and tested**: 55 JUnit tests pass on dummy data, including SC-01..SC-10, canary leak, isolation, injection, property and load tests. Run `backend/cccore/tools-run.sh` (needs Java 21 and network for jars) |
+| SAP-bound code (`ChatDaoImpl`, items, controller, Backoffice, sample-data loader, Spring XML; the facade compiles against stubs) | **Written, not compiled or run on SAP.** Imports and wiring are UNVERIFIED; see `docs/assumptions.md` and `docs/verification-log.md` |
 | Storefront feature library | Core logic tested (13 vitest tests incl. real HTTP SSE); components compile under Angular strict templates; never rendered; no axe, e2e or screenshot run |
 | Pack generator, ImpEx, order plans | Generator tested (determinism, 43 toggles, fixtures); ImpEx never loaded |
 | Providers | Contract-tested on synthetic fixtures only; request shapes and model IDs UNVERIFIED |
 | Spikes S1-S8 | Mostly not run: `docs/spikes/` |
 
 Next steps for the owner: provide a SAP Commerce 2211 build environment, the missing owner examples (`docs/examples/MISSING_EXAMPLES.md`), provider keys for S3/S4/S8, and decisions in `docs/owner-approvals.md`.
+
+## Backend files
+Controller `ChatController`; facade `ChatFacade` + `DefaultChatFacade`; service `ChatService` + `DefaultChatService`; DAO `ChatDao` + `ChatDaoImpl`. Plus one sample-data class (`ChatSampleDataSetup`). Everything else is XML/ImpEx/resources. See `docs/architecture.md`.
 
 ## Layout
 `backend/{cccore,ccfacades,ccocc,ccbackoffice,ccsampledata}`, `storefront/chat-feature`, `tools/{packgen,beangen,ci}`, `docs/`. Design inputs are in `docs/design/` and the owner's code samples in `docs/examples/` (read-only).

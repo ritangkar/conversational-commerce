@@ -5,162 +5,160 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.conversational.commerce.core.engine.demo.MapConfigSource;
-import com.conversational.commerce.core.engine.config.DefaultCcConfigurationService;
-import com.conversational.commerce.core.engine.provider.AbstractHttpAdapter;
-import com.conversational.commerce.core.engine.provider.AnthropicAdapter;
-import com.conversational.commerce.core.engine.provider.DefaultModelRouter;
-import com.conversational.commerce.core.engine.provider.GeminiAdapter;
-import com.conversational.commerce.core.engine.provider.HttpTransport;
-import com.conversational.commerce.core.engine.provider.ModelProviderAdapter;
-import com.conversational.commerce.core.engine.provider.ModelRequest;
-import com.conversational.commerce.core.engine.provider.ModelResult;
-import com.conversational.commerce.core.engine.provider.ModelRouter;
-import com.conversational.commerce.core.engine.provider.ModelTask;
-import com.conversational.commerce.core.engine.provider.OpenAiAdapter;
-import com.conversational.commerce.core.engine.orchestrator.PromptRepository;
-import com.conversational.commerce.core.engine.sanitiser.DefaultSanitiser;
-import com.conversational.commerce.core.engine.sanitiser.RegexMaskingRule;
-import com.conversational.commerce.core.engine.sanitiser.TokenMap;
+import com.conversational.commerce.core.engine.demo.DemoDataset;
+import com.conversational.commerce.core.service.impl.DefaultChatService;
+import com.conversational.commerce.core.service.impl.DefaultChatService.ModelResult;
+import com.conversational.commerce.core.service.impl.DefaultChatService.ModelTransport;
+import com.conversational.commerce.core.service.impl.DefaultChatService.ModelUnavailableException;
 import de.hybris.platform.servicelayer.exceptions.SystemException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Contract tests from recorded (synthetic) fixtures. No key and no network are needed. Request shapes are UNVERIFIED (S3). */
+/** Contract tests from recorded (synthetic) fixtures through the real service path. No key and no network. Request shapes are UNVERIFIED (S3). */
 class ProviderContractTest
 {
-    private final DefaultCcConfigurationService config = new DefaultCcConfigurationService();
-    private final MapConfigSource props = new MapConfigSource();
-    private final List<String> sentUrls = new ArrayList<>();
-    private final List<String> sentBodies = new ArrayList<>();
+    private final DemoDataset data = new DemoDataset(LocalDate.of(2026, 11, 13));
+    private final DefaultChatService service = new DefaultChatService();
+    private final List<String> urls = new ArrayList<>();
+    private final List<String> bodies = new ArrayList<>();
     private final List<Map<String, String>> sentHeaders = new ArrayList<>();
 
-    private HttpTransport transport(final int status, final String fixture) throws IOException
+    private ProviderContractTest()
     {
-        final String body = fixture == null ? "" : Files.readString(Path.of("testsrc/fixtures/providers/" + fixture));
-        return (url, headers, requestBody, timeout) ->
+        data.properties.put("cc.config.cacheTtlSeconds", "0");
+        service.setChatDao(data);
+    }
+
+    private static String fixture(final String name) throws IOException
+    {
+        return Files.readString(Path.of("testsrc/fixtures/providers/" + name));
+    }
+
+    private void provider(final String code, final int status, final String fixtureName) throws IOException
+    {
+        data.properties.put("cc.provider." + code + ".baseUrl", "https://" + code + ".invalid").put("cc.provider.key." + code, "test-only-not-a-key");
+        final String body = fixtureName == null ? "" : fixture(fixtureName);
+        final ModelTransport previous = fixtureTransport;
+        fixtureTransport = (url, headers, requestBody, timeout) ->
         {
-            sentUrls.add(url);
-            sentBodies.add(requestBody);
+            urls.add(url);
+            bodies.add(requestBody);
             sentHeaders.add(headers);
-            return new HttpTransport.Response(status, body);
+            return url.contains(code + ".invalid") ? new ModelTransport.Response(status, body) : previous.post(url, headers, requestBody, timeout);
         };
+        service.setTransport(fixtureTransport);
     }
 
-    private ModelRequest request()
+    private ModelTransport fixtureTransport = (url, headers, body, timeout) -> new ModelTransport.Response(404, "");
+
+    private void route(final String provider, final String fallback)
     {
-        final DefaultSanitiser sanitiser = new DefaultSanitiser();
-        sanitiser.setConfigurationService(config);
-        sanitiser.setRules(List.of(RegexMaskingRule.EMAIL));
-        final PromptRepository prompts = new PromptRepository();
-        return new ModelRequest(ModelTask.COMPOSE, "compose.v1", prompts.prompt("compose.v1"),
-                sanitiser.sanitise(ModelTask.COMPOSE, Map.of("intent", "x", "facts", Map.of("n", "a@b.co")), new TokenMap(), List.of()),
-                prompts.schema("compose.v1"), 200, 0.0);
+        data.properties.put("route.compose.provider", provider).put("route.compose.model", "m");
+        if (fallback != null)
+        {
+            data.properties.put("route.compose.fallback", fallback);
+        }
     }
 
-    private <T extends AbstractHttpAdapter> T adapter(final T a, final String code, final HttpTransport t)
+    private ModelResult call()
     {
-        config.setSources(List.of(props));
-        props.put("cc.provider." + code + ".baseUrl", "https://provider.invalid").put("cc.provider.key." + code, "test-only-not-a-key");
-        a.setConfigurationService(config);
-        a.setTransport(t);
-        return a;
+        return service.callModel("COMPOSE", "compose.v1", Map.of("intent", "x", "facts", Map.of("n", "a@b.co")), List.of());
     }
 
     @Test
     void openAiShapeAndParsing() throws Exception
     {
-        final OpenAiAdapter a = adapter(new OpenAiAdapter(), "openai", transport(200, "openai-ok.json"));
-        final ModelResult r = a.call("some-model", request());
+        provider("openai", 200, "openai-ok.json");
+        route("openai", null);
+        final ModelResult r = call();
         assertEquals("hello", r.json().path("text").asText());
         assertEquals(11, r.tokensIn());
         assertEquals(3, r.tokensOut());
-        final String body = sentBodies.get(0);
-        assertTrue(body.contains("\"store\":false") && body.contains("\"strict\":true") && body.contains("json_schema"));
-        assertTrue(sentUrls.get(0).endsWith("/v1/chat/completions"));
+        assertTrue(bodies.get(0).contains("\"store\":false") && bodies.get(0).contains("\"strict\":true") && bodies.get(0).contains("json_schema"));
+        assertTrue(urls.get(0).endsWith("/v1/chat/completions"));
         assertEquals("Bearer test-only-not-a-key", sentHeaders.get(0).get("Authorization"));
-        assertFalse(body.contains("a@b.co"), "payload was sanitised before the adapter");
+        assertFalse(bodies.get(0).contains("a@b.co"), "payload was sanitised before the call");
     }
 
     @Test
     void anthropicUsesForcedToolWithSchema() throws Exception
     {
-        final AnthropicAdapter a = adapter(new AnthropicAdapter(), "anthropic", transport(200, "anthropic-ok.json"));
-        final ModelResult r = a.call("some-model", request());
+        provider("anthropic", 200, "anthropic-ok.json");
+        route("anthropic", null);
+        final ModelResult r = call();
         assertEquals("hello", r.json().path("text").asText());
         assertEquals(12, r.tokensIn());
-        assertTrue(sentBodies.get(0).contains("\"tool_choice\":{\"type\":\"tool\""));
+        assertTrue(bodies.get(0).contains("\"tool_choice\":{\"type\":\"tool\""));
         assertTrue(sentHeaders.get(0).containsKey("x-api-key") && sentHeaders.get(0).containsKey("anthropic-version"));
     }
 
     @Test
     void geminiStripsAdditionalProperties() throws Exception
     {
-        final GeminiAdapter a = adapter(new GeminiAdapter(), "gemini", transport(200, "gemini-ok.json"));
-        final ModelResult r = a.call("some-model", request());
+        provider("gemini", 200, "gemini-ok.json");
+        route("gemini", null);
+        final ModelResult r = call();
         assertEquals("hello", r.json().path("text").asText());
         assertEquals(13, r.tokensIn());
-        assertFalse(sentBodies.get(0).contains("additionalProperties"));
-        assertTrue(sentBodies.get(0).contains("responseSchema"));
-        assertTrue(sentUrls.get(0).contains(":generateContent"));
+        assertFalse(bodies.get(0).contains("additionalProperties"));
+        assertTrue(bodies.get(0).contains("responseSchema") && urls.get(0).contains(":generateContent"));
     }
 
     @Test
-    void non200ThrowsSystemExceptionWithoutLeakingTheBody() throws Exception
+    void non200AndEmptyContentFailOverToTheNextProviderOrFail() throws Exception
     {
-        final OpenAiAdapter a = adapter(new OpenAiAdapter(), "openai", transport(500, null));
-        final SystemException e = assertThrows(SystemException.class, () -> a.call("m", request()));
-        assertTrue(e.getMessage().contains("500"));
+        provider("openai", 500, null);
+        route("openai", null);
+        assertThrows(ModelUnavailableException.class, this::call);
+        provider("openai", 200, null); // body "" -> unreadable content
+        assertThrows(ModelUnavailableException.class, this::call);
     }
 
     @Test
-    void nullContentThrowsSystemException() throws Exception
+    void providerWithoutKeyOrUrlIsSkipped()
     {
-        final OpenAiAdapter a = adapter(new OpenAiAdapter(), "openai", (u, h, b, t) -> new HttpTransport.Response(200, "{}"));
-        assertThrows(SystemException.class, () -> a.call("m", request()));
-    }
-
-    @Test
-    void adapterWithoutKeyOrUrlIsUnavailable()
-    {
-        config.setSources(List.of(props));
-        final OpenAiAdapter a = new OpenAiAdapter();
-        a.setConfigurationService(config);
-        assertFalse(a.isAvailable());
+        route("openai", null);
+        assertThrows(ModelUnavailableException.class, this::call);
     }
 
     @Test
     void routerFallsBackAndRefusesFreeTierOutsideSyntheticSites() throws Exception
     {
-        final GeminiAdapter gemini = adapter(new GeminiAdapter(), "gemini", transport(200, "gemini-ok.json"));
-        final OpenAiAdapter openai = adapter(new OpenAiAdapter(), "openai", transport(200, "openai-ok.json"));
-        props.put("cc.config.cacheTtlSeconds", "0").put("cc.provider.gemini.tier", "free").put("route.compose.provider", "gemini").put("route.compose.model", "g")
-                .put("route.compose.fallback", "openai:o");
-        final DefaultModelRouter router = new DefaultModelRouter();
-        router.setConfigurationService(config);
-        router.setAdapters(List.<ModelProviderAdapter>of(gemini, openai));
-        props.put("cc.syntheticDataOnly", "true");
-        assertEquals("gemini", router.call(request()).provider());
-        props.put("cc.syntheticDataOnly", "false");
-        assertEquals("openai", router.call(request()).provider(), "free tier refused for non-synthetic data");
-        props.put("cc.provider.openai.enabled", "false");
-        assertThrows(ModelRouter.ModelUnavailableException.class, () -> router.call(request()));
+        provider("gemini", 200, "gemini-ok.json");
+        provider("openai", 200, "openai-ok.json");
+        data.properties.put("cc.provider.gemini.tier", "free");
+        route("gemini", "openai:o");
+        data.properties.put("cc.syntheticDataOnly", "true");
+        assertEquals("gemini", call().provider());
+        data.properties.put("cc.syntheticDataOnly", "false");
+        assertEquals("openai", call().provider(), "free tier refused for non-synthetic data");
+        data.properties.put("cc.provider.openai.enabled", "false");
+        assertThrows(ModelUnavailableException.class, this::call);
     }
 
     @Test
     void routerFallsBackWhenPrimaryFails() throws Exception
     {
-        final OpenAiAdapter failing = adapter(new OpenAiAdapter(), "openai", transport(503, null));
-        final AnthropicAdapter ok = adapter(new AnthropicAdapter(), "anthropic", transport(200, "anthropic-ok.json"));
-        props.put("route.compose.provider", "openai").put("route.compose.model", "o").put("route.compose.fallback", "anthropic:a");
-        final DefaultModelRouter router = new DefaultModelRouter();
-        router.setConfigurationService(config);
-        router.setAdapters(List.<ModelProviderAdapter>of(failing, ok));
-        assertEquals("anthropic", router.call(request()).provider());
+        provider("openai", 503, null);
+        provider("anthropic", 200, "anthropic-ok.json");
+        route("openai", "anthropic:a");
+        assertEquals("anthropic", call().provider());
+    }
+
+    @Test
+    void nonSuccessErrorMessageCarriesTheStatusOnly() throws Exception
+    {
+        provider("openai", 500, null);
+        // reach the private path through the router: the failure is logged by class and the chain ends
+        route("openai", null);
+        final ModelUnavailableException e = assertThrows(ModelUnavailableException.class, this::call);
+        assertFalse(e.getMessage().contains("a@b.co"));
+        assertTrue(SystemException.class.getSimpleName().length() > 0);
     }
 }

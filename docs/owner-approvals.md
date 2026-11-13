@@ -20,4 +20,5 @@ Nothing below has been applied beyond what is stated.
 | B5 | HTTP-level S7 and S1/S2/S3/S4/S5/S6/S8 not run | acceptance | See `docs/spikes/` | no spike branch that changes a protected decision was triggered or applied |
 
 Protected decisions D01-D37 were not changed. N3 (welcome caching) is not implemented; N8 (PwC theme) is implemented as designed and flagged in `docs/theming.md`.
+| B6 | Backend consolidated into one service and one DAO as requested (AS-20). Trade-offs: `DefaultChatService` is about 2,700 lines; PL-08 extension points (separate tool/workflow/gateway beans, registries) are replaced by editing or overriding one bean; the DAO returns value types, not models | PL-08, D37 | Alternative: restore the layered engine (it is in git history before this change) | as implemented, per the owner's request |
 

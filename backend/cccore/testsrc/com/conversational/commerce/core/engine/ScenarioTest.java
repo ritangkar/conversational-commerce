@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.conversational.commerce.core.engine.demo.DemoDataset;
 import com.conversational.commerce.core.engine.demo.EngineFixture;
-import com.conversational.commerce.core.engine.model.Blocks.Block;
-import com.conversational.commerce.core.engine.model.ChatEvent;
-import com.conversational.commerce.core.engine.model.Intent;
-import com.conversational.commerce.core.engine.model.TurnRequest;
-import com.conversational.commerce.core.engine.model.TurnResult;
+import com.conversational.commerce.core.service.ChatService.Block;
+import com.conversational.commerce.core.service.ChatService.ChatEvent;
+import com.conversational.commerce.core.service.ChatService.PurchaseLine;
+import com.conversational.commerce.core.service.ChatService.TurnRequest;
+import com.conversational.commerce.core.service.ChatService.TurnResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +37,7 @@ class ScenarioTest
         final List<ChatEvent> events = new ArrayList<>();
         final TurnResult r = f.ask(DemoDataset.TYRES_DEALER,
                 "I need to prepare my next order. Can you help me identify what I should purchase?", events);
-        assertEquals(Intent.NEXT_ORDER, r.intent());
+        assertEquals("NEXT_ORDER", r.intent());
         final Block recs = block(r, "recommendationList").orElseThrow();
         final List<String> codes = recs.recommendations().stream().map(x -> x.code()).toList();
         assertTrue(codes.contains("TY-1001") && codes.contains("TY-1002"), codes.toString());
@@ -57,7 +57,7 @@ class ScenarioTest
         final EngineFixture f = new EngineFixture("paints");
         final TurnResult r = f.ask(DemoDataset.PAINTS_DEALER,
                 "I need something to waterproof an exterior concrete wall, medium coverage, under 3000 a unit.");
-        assertEquals(Intent.FIND_PRODUCT, r.intent());
+        assertEquals("FIND_PRODUCT", r.intent());
         final List<String> codes = block(r, "productCards").orElseThrow().productCards().stream().map(c -> c.code()).toList();
         assertTrue(codes.contains("PN-2001") && codes.contains("PN-2003"), codes.toString());
         assertFalse(codes.contains("PN-2002"), "4200 per unit is over the limit");
@@ -70,7 +70,7 @@ class ScenarioTest
         final EngineFixture f = new EngineFixture("electrical");
         final TurnResult r = f.ask(DemoDataset.ELECTRICAL_DEALER,
                 "Need 20 of EL-4821, 10 x 2.5mm cable 100m, 5 of EL-9910, and whatever replaces EL-1033.");
-        assertEquals(Intent.QUICK_ORDER, r.intent());
+        assertEquals("QUICK_ORDER", r.intent());
         final var lines = block(r, "purchaseList").orElseThrow().purchaseListLines();
         assertTrue(lines.stream().anyMatch(l -> l.productCode().equals("EL-4821") && l.quantity() == 20));
         assertTrue(lines.stream().anyMatch(l -> l.productCode().equals("EL-1034") && l.quantity() == 10));
@@ -83,11 +83,11 @@ class ScenarioTest
     {
         final EngineFixture f = new EngineFixture("cement");
         final TurnResult r = f.ask(DemoDataset.CEMENT_DEALER, "I have 5 lakh to spend this month. Prepare my usual items.");
-        assertEquals(Intent.BUDGET_PLAN, r.intent());
+        assertEquals("BUDGET_PLAN", r.intent());
         long total = 0;
         for (final var l : block(r, "purchaseList").orElseThrow().purchaseListLines())
         {
-            total += f.data.unitPriceMinor(DemoDataset.CEMENT_DEALER, l.productCode()).getAsLong() * l.quantity();
+            total += f.data.findUnitPriceMinor(DemoDataset.CEMENT_DEALER, l.productCode()).getAsLong() * l.quantity();
         }
         assertTrue(total <= 50_000_000L && total > 0, "total " + total);
         assertTrue(text(r).contains("INR 500,000.00"), text(r));
@@ -97,7 +97,7 @@ class ScenarioTest
     void sc05PatternChangeWelcome()
     {
         final EngineFixture f = new EngineFixture("plywood");
-        final Block w = f.welcome.build(DemoDataset.PLYWOOD_DEALER, f.today);
+        final Block w = f.service.buildWelcome(DemoDataset.PLYWOOD_DEALER);
         final var item = w.welcomeItems().stream().filter(i -> i.kind().equals("patternChange")).findFirst().orElseThrow();
         assertEquals("PW-1801", item.params().get("code"));
         assertEquals("39", item.params().get("percent"));
@@ -109,7 +109,7 @@ class ScenarioTest
         final EngineFixture f = new EngineFixture("tyres");
         final TurnResult r = f.ask(DemoDataset.TYRES_DEALER,
                 "Show my undelivered orders from last month over 20,000 and where the latest one is.");
-        assertEquals(Intent.ORDER_LOOKUP, r.intent());
+        assertEquals("ORDER_LOOKUP", r.intent());
         final var orders = block(r, "orderSummary").orElseThrow().orderSummaries();
         assertEquals(2, orders.size(), orders.toString());
         assertTrue(orders.stream().noneMatch(o -> o.code().equals(DemoDataset.OTHER_CUSTOMER_ORDER)));
@@ -126,7 +126,7 @@ class ScenarioTest
                 "Compare these three exterior primers and tell me which suits a coastal area.", "c", "en", List.of(),
                 List.of("PN-3001", "PN-3002", "PN-3003"), List.of());
         final TurnResult r = f.ask(request, new ArrayList<>());
-        assertEquals(Intent.COMPARE, r.intent());
+        assertEquals("COMPARE", r.intent());
         final var table = block(r, "comparison").orElseThrow().comparison();
         assertEquals(3, table.columns().size());
         assertTrue(table.notes().stream().anyMatch(n -> n.contains("coastal")), "coastal not recorded for every product");
@@ -139,10 +139,10 @@ class ScenarioTest
     {
         final EngineFixture f = new EngineFixture("electrical");
         final TurnRequest request = new TurnRequest(DemoDataset.ELECTRICAL_DEALER, "Review my list before I go to checkout.", "c",
-                "en", List.of(), List.of(), List.of(new TurnRequest.PurchaseLine("EL-9910", 5, null),
-                        new TurnRequest.PurchaseLine("EL-5050", 10, null), new TurnRequest.PurchaseLine("NOPE-1", 1, null)));
+                "en", List.of(), List.of(), List.of(new PurchaseLine("EL-9910", 5, null, null),
+                        new PurchaseLine("EL-5050", 10, null, null), new PurchaseLine("NOPE-1", 1, null, null)));
         final TurnResult r = f.ask(request, new ArrayList<>());
-        assertEquals(Intent.BASKET_REVIEW, r.intent());
+        assertEquals("BASKET_REVIEW", r.intent());
         final var flags = block(r, "recommendationList").orElseThrow().recommendations();
         assertTrue(flags.stream().anyMatch(x -> x.code().equals("EL-4821") && x.reasonKey().equals("FORGOTTEN_USUAL")));
         assertTrue(flags.stream().anyMatch(x -> x.code().equals("EL-5050") && x.reasonKey().equals("DUPLICATE_OF_PENDING")));
@@ -155,7 +155,7 @@ class ScenarioTest
         final EngineFixture f = new EngineFixture("cement");
         final TurnResult r = f.ask(DemoDataset.CEMENT_DEALER, "मेरा अगला ऑर्डर तैयार करने में मदद करें");
         assertEquals("hi", r.language());
-        assertEquals(Intent.NEXT_ORDER, r.intent());
+        assertEquals("NEXT_ORDER", r.intent());
         assertTrue(text(r).startsWith("(हिंदी)"), text(r));
         assertTrue(f.fake.tasks.contains("TRANSLATE"));
     }
@@ -164,9 +164,9 @@ class ScenarioTest
     void sc10PackSwitchTakesEffectAfterTtl()
     {
         final EngineFixture f = new EngineFixture("tyres");
-        assertEquals("tyres", f.config.activePack());
+        assertEquals("tyres", f.service.getPublicConfig().activePack());
         f.backoffice.put("cc.activePack", "paints");
-        assertEquals("paints", f.config.activePack(), "TTL 0 in tests: effective at once");
+        assertEquals("paints", f.service.getPublicConfig().activePack(), "TTL 0 in tests: effective at once");
         final TurnResult r = f.ask(DemoDataset.PAINTS_DEALER, "Show me a waterproof coating for exterior concrete");
         assertNotNull(block(r, "productCards").orElse(null));
     }

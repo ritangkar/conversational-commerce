@@ -87,9 +87,11 @@ INSERT_UPDATE CCConfigEntry;configuration(code)[unique=true];entryType(code)[uni
 ;default;PROVIDER_ROUTE;;route.explain.model;;true;0
 ;default;PROVIDER_ROUTE;;route.explain.fallback;;true;0
 
-# Retention (D08): cron job and trigger rows. The job bean is ccRetentionJob.
-INSERT_UPDATE ServicelayerJob;code[unique=true];springId
-;ccRetentionJob;ccRetentionJob
+# Retention (D08): a scripting job calls ChatService.purgeExpiredData() daily (no extra Java class). UNVERIFIED syntax (AS-10).
+INSERT_UPDATE Script;code[unique=true];scriptType(code);content
+;ccRetentionScript;GROOVY;"spring.getBean('ccChatService').purgeExpiredData()"
+INSERT_UPDATE ScriptingJob;code[unique=true];scriptURI
+;ccRetentionJob;model://ccRetentionScript
 INSERT_UPDATE CronJob;code[unique=true];job(code);singleExecutable;sessionLanguage(isocode)
 ;ccRetentionCronJob;ccRetentionJob;false;en
 INSERT_UPDATE Trigger;cronJob(code)[unique=true];cronExpression

@@ -9,7 +9,7 @@ import json, pathlib, random, re, sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "tools/packgen"
 OUT = ROOT / "backend/ccsampledata/resources/ccsampledata/import"
-CAPS_JAVA = ROOT / "backend/cccore/src/com/conversational/commerce/core/engine/model/Capabilities.java"
+CAPS_JAVA = ROOT / "backend/cccore/src/com/conversational/commerce/core/service/ChatService.java"
 TYPES = {"string": str, "array": list, "object": dict, "integer": int, "boolean": bool}
 
 
@@ -154,8 +154,11 @@ def essential(caps, packs):
     L += toggles
     L += [f";default;THRESHOLD;;{k};{esc(v)};true;0" for k, v in sorted(defaults.items())]
     L += routes
-    L += ["", "# Retention (D08): cron job and trigger rows. The job bean is ccRetentionJob.",
-          "INSERT_UPDATE ServicelayerJob;code[unique=true];springId", ";ccRetentionJob;ccRetentionJob",
+    L += ["", "# Retention (D08): a scripting job calls ChatService.purgeExpiredData() daily (no extra Java class). UNVERIFIED syntax (AS-10).",
+          "INSERT_UPDATE Script;code[unique=true];scriptType(code);content",
+          ";ccRetentionScript;GROOVY;\"spring.getBean('ccChatService').purgeExpiredData()\"",
+          "INSERT_UPDATE ScriptingJob;code[unique=true];scriptURI",
+          ";ccRetentionJob;model://ccRetentionScript",
           "INSERT_UPDATE CronJob;code[unique=true];job(code);singleExecutable;sessionLanguage(isocode)", ";ccRetentionCronJob;ccRetentionJob;false;en",
           "INSERT_UPDATE Trigger;cronJob(code)[unique=true];cronExpression", ";ccRetentionCronJob;0 0 3 * * ?",
           "", "# Business manager group (A10): only members may open CCProductBusinessAttribute in Backoffice.",
@@ -175,7 +178,7 @@ def main():
     if errors:
         print("\n".join(errors))
         sys.exit(1)
-    caps = re.findall(r'"([A-Z]{2}-\d{2})"', re.search(r"ALL = List\.of\((.*?)\);", CAPS_JAVA.read_text(), re.S).group(1))
+    caps = re.findall(r'"([A-Z]{2}-\d{2})"', re.search(r"CAPABILITIES = List\.of\((.*?)\);", CAPS_JAVA.read_text(), re.S).group(1))
     assert len(caps) == 43, len(caps)
     (OUT / "essential").mkdir(parents=True, exist_ok=True)
     (OUT / "projectdata").mkdir(parents=True, exist_ok=True)

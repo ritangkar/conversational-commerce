@@ -9,9 +9,6 @@
     <context:annotation-config/>
     <context:component-scan base-package="com.conversational.commerce.occ.controllers"/>
 
-    <bean id="ccUserBindingGuard" class="com.conversational.commerce.occ.security.UserBindingGuard"/>
-    <bean id="ccSessionPropagator" class="com.conversational.commerce.occ.security.SessionPropagator"/>
-
     <!-- Bounded pool: cc.http.pool.size workers, small queue, then reject (the client falls back to POST /chat). -->
     <bean id="ccChatStreamExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="corePoolSize" value="${cc.http.pool.size:8}"/>

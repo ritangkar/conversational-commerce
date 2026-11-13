@@ -16,11 +16,13 @@ Each entry lists the file it affects. Code carries a matching `// ASSUMPTION:` m
 | AS-10 | ImpEx syntax, `SampleOrderLoader`, `AbstractSystemSetup` use, classification layout and user-rights rows written from memory; never loaded into a platform | `backend/ccsampledata/**`, `tools/packgen/generate.py` | Verify in S5 |
 | AS-11 | Pack manifests are JSON, not YAML, to avoid a dependency; validated by a small subset validator, not full JSON Schema | `tools/packgen` | Owner may prefer YAML |
 | AS-12 | Bean XML files are named `<extension>-beans.xml` (platform convention) rather than `facade-beans.xml`/`occ-beans.xml`; content follows the sample | `backend/ccfacades/resources`, `backend/ccocc/resources` | Confirm file naming |
-| AS-13 | Engine value types are Java records; engine classes are SAP-independent and use `@Resource(name = "ccXxx")` fields plus setters for tests | `backend/cccore/.../engine` | Setters are an addition to the owner's convention |
+| AS-13 | Value types are Java records; the service is SAP-independent, uses `@Resource(name = "ccXxx")` and has setters for tests | `backend/cccore/.../service` | Setters are an addition to the owner's convention |
 | AS-14 | PL-03 and PL-04 can be toggled off but then fail closed; PL-01 cannot be turned off; PL-05 needs `capability.PL-05.confirmDisable` (A1 reading) | `DefaultCcConfigurationService` | Owner to confirm the interpretation |
 | AS-15 | A tool or time limit returns a notice, not partial blocks | `DefaultChatOrchestrationService` | Design says partial results |
 | AS-16 | Quick order uses the deterministic grammar only, no model parse of residual lines | `QuickOrderWorkflow` | Design lists a model parse |
 | AS-17 | A product is "discontinued" when not APPROVED; its replacement is the first FOLLOWUP reference | `PlatformCatalogGateway`, ImpEx | Owner to confirm the model |
 | AS-18 | Worker threads for streaming re-activate the captured JaloSession so prices use the customer's context | `SessionPropagator` | Verify in S1 |
 | AS-19 | No `LICENSE` file added; the licence is the owner's decision | repo root | Owner to choose |
-
+| AS-20 | **Owner request: backend reduced to controller, facade (+impl), service (+impl), DAO (+impl).** `ChatDao` returns plain value types (not models) and hosts the few writes; the service is platform-free so it can be tested | all backend | Weakens the designed SPIs (PL-08) and readability: see `owner-approvals.md` B6 |
+| AS-21 | OOTB `OrderStatus` has no SHIPPED; READY is treated as dispatched, unknown values as in progress | `ChatDaoImpl` | Owner to confirm status model |
+| AS-22 | Retention runs as a Groovy `ScriptingJob` calling `ccChatService.purgeExpiredData()` (no extra Java class); the scripting syntax is unverified | essential-data ImpEx | Verify on the platform |
