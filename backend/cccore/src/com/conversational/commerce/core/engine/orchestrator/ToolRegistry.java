@@ -20,13 +20,13 @@ public class ToolRegistry
     {
     }
 
-    @Resource
+    @Resource(name = "ccChatTools")
     private List<ChatTool> tools;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4, r ->

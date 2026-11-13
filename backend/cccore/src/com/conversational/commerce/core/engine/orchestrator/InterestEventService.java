@@ -16,10 +16,10 @@ public class InterestEventService
 {
     private static final Pattern TOKEN_OK = Pattern.compile("[a-z]{3,30}");
 
-    @Resource
+    @Resource(name = "ccInterestEventSink")
     private InterestEventSink interestEventSink;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     public void setInterestEventSink(final InterestEventSink s)

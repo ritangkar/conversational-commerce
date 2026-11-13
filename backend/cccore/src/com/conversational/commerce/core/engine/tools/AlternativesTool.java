@@ -15,10 +15,10 @@ import java.util.Optional;
 /** Alternatives (PD-06): the defined replacement of a discontinued item, else same-category items that are in demo stock. */
 public class AlternativesTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
-    @Resource
+    @Resource(name = "ccStockGateway")
     private StockGateway stockGateway;
 
     public void setCatalogGateway(final CatalogGateway catalogGateway)

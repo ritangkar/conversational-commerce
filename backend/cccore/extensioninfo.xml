@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ASSUMPTION: standard extensioninfo layout (docs/assumptions.md AS-03). -->
+<extensioninfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="extensioninfo.xsd">
+    <extension abstractclassprefix="Generated" classprefix="Cccore" name="cccore">
+        <requires-extension name="commerceservices"/>
+        <coremodule generated="true" manager="com.conversational.commerce.core.jalo.CccoreManager" packageroot="com.conversational.commerce.core"/>
+    </extension>
+</extensioninfo>

@@ -23,16 +23,16 @@ public class Composer
 {
     private static final Pattern CODE = Pattern.compile("\\b[A-Z]{2,4}-\\d{3,6}\\b");
 
-    @Resource
+    @Resource(name = "ccSanitiser")
     private Sanitiser sanitiser;
 
-    @Resource
+    @Resource(name = "ccModelRouter")
     private ModelRouter modelRouter;
 
-    @Resource
+    @Resource(name = "ccPromptRepository")
     private PromptRepository promptRepository;
 
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     private final TextTableChecker tableChecker = new TextTableChecker();

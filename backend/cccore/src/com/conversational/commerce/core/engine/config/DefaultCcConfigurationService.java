@@ -22,7 +22,7 @@ public class DefaultCcConfigurationService implements CcConfigurationService
     private static final String SYNTHETIC_KEY = "cc.syntheticDataOnly";
 
     /** Layers, highest priority first (Backoffice entries, then properties and environment). */
-    @Resource
+    @Resource(name = "ccConfigSources")
     private List<ConfigSource> sources;
 
     private Clock clock = Clock.systemUTC();

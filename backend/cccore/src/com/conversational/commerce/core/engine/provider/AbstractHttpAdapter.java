@@ -24,7 +24,7 @@ public abstract class AbstractHttpAdapter implements ModelProviderAdapter
     private static final String TIMEOUT_KEY = "cc.http.requestTimeoutMs";
     private static final String CONNECT_TIMEOUT_KEY = "cc.http.connectTimeoutMs";
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     protected CcConfigurationService configurationService;
 
     private HttpTransport transport;

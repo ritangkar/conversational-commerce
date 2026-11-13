@@ -25,7 +25,7 @@ public final class OrderTools
 
     public abstract static class Base implements ChatTool
     {
-        @Resource
+        @Resource(name = "ccOrderGateway")
         protected OrderGateway orderGateway;
 
         public void setOrderGateway(final OrderGateway orderGateway)

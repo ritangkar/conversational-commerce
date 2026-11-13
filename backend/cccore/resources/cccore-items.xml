@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ASSUMPTION: standard hybris items.xml layout; the owner has not supplied an items.xml sample (docs/assumptions.md AS-03). -->
+<items xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="items.xsd">
+
+    <enumtypes>
+        <enumtype code="CCProviderCode" autocreate="true" generate="true" dynamic="false">
+            <value code="GEMINI"/>
+            <value code="OPENAI"/>
+            <value code="ANTHROPIC"/>
+        </enumtype>
+        <enumtype code="CCEventType" autocreate="true" generate="true" dynamic="false">
+            <value code="VIEWED"/>
+            <value code="COMPARED"/>
+            <value code="SHORTLISTED"/>
+            <value code="REQUESTED_NOT_FOUND"/>
+        </enumtype>
+        <enumtype code="CCFeedbackRating" autocreate="true" generate="true" dynamic="false">
+            <value code="UP"/>
+            <value code="DOWN"/>
+        </enumtype>
+        <enumtype code="CCConfigEntryType" autocreate="true" generate="true" dynamic="false">
+            <value code="TOGGLE"/>
+            <value code="THRESHOLD"/>
+            <value code="PROMPT"/>
+            <value code="TERMINOLOGY"/>
+            <value code="PROVIDER_ROUTE"/>
+            <value code="PACK"/>
+            <value code="FAQ"/>
+            <value code="SEARCH_FIELD"/>
+            <value code="ATTRIBUTE_MAPPING"/>
+            <value code="RECOMMENDATION_WEIGHT"/>
+        </enumtype>
+    </enumtypes>
+
+    <itemtypes>
+        <!-- One row per base site. Holds the pack switch (PL-01, PL-07). -->
+        <itemtype code="CCConfiguration" autocreate="true" generate="true">
+            <deployment table="ccconfiguration" typecode="14100"/>
+            <attributes>
+                <attribute qualifier="code" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers optional="false" unique="true"/>
+                </attribute>
+                <attribute qualifier="activePack" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers optional="false"/>
+                    <defaultvalue>"tyres"</defaultvalue>
+                </attribute>
+                <attribute qualifier="syntheticDataOnly" type="java.lang.Boolean">
+                    <persistence type="property"/>
+                    <defaultvalue>Boolean.TRUE</defaultvalue>
+                    <description>A2: when true, free-tier providers are allowed; set false for any site with real data.</description>
+                </attribute>
+                <attribute qualifier="enabled" type="java.lang.Boolean">
+                    <persistence type="property"/>
+                    <defaultvalue>Boolean.TRUE</defaultvalue>
+                </attribute>
+            </attributes>
+        </itemtype>
+
+        <itemtype code="CCConfigEntry" autocreate="true" generate="true">
+            <deployment table="ccconfigentry" typecode="14101"/>
+            <attributes>
+                <attribute qualifier="configuration" type="CCConfiguration">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true"/>
+                </attribute>
+                <attribute qualifier="entryType" type="CCConfigEntryType">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true"/>
+                </attribute>
+                <attribute qualifier="packCode" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers initial="true"/>
+                    <description>Empty for entries that apply to every pack.</description>
+                </attribute>
+                <attribute qualifier="key" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true"/>
+                </attribute>
+                <attribute qualifier="value" type="localized:java.lang.String">
+                    <persistence type="property">
+                        <columntype database="oracle"><value>CLOB</value></columntype>
+                        <columntype database="sap"><value>NCLOB</value></columntype>
+                        <columntype database="mysql"><value>TEXT</value></columntype>
+                        <columntype><value>HYBRIS.LONG_STRING</value></columntype>
+                    </persistence>
+                </attribute>
+                <attribute qualifier="enabled" type="java.lang.Boolean">
+                    <persistence type="property"/>
+                    <defaultvalue>Boolean.TRUE</defaultvalue>
+                </attribute>
+                <attribute qualifier="sortOrder" type="java.lang.Integer">
+                    <persistence type="property"/>
+                    <defaultvalue>Integer.valueOf(0)</defaultvalue>
+                </attribute>
+            </attributes>
+            <indexes>
+                <index name="ccConfigEntryUq" unique="true">
+                    <key attribute="configuration"/>
+                    <key attribute="entryType"/>
+                    <key attribute="packCode"/>
+                    <key attribute="key"/>
+                </index>
+            </indexes>
+        </itemtype>
+
+        <!-- D08: dedicated table, no text column, written only by InterestEventService. -->
+        <itemtype code="CCInterestEvent" autocreate="true" generate="true">
+            <deployment table="ccinterestevent" typecode="14102"/>
+            <attributes>
+                <attribute qualifier="customer" type="Customer">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true" write="false"/>
+                </attribute>
+                <attribute qualifier="eventType" type="CCEventType">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true" write="false"/>
+                </attribute>
+                <attribute qualifier="productCode" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers write="false"/>
+                </attribute>
+                <attribute qualifier="categoryCode" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers write="false"/>
+                </attribute>
+                <attribute qualifier="normalisedToken" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers write="false"/>
+                </attribute>
+                <attribute qualifier="packCode" type="java.lang.String">
+                    <persistence type="property"/>
+                </attribute>
+                <attribute qualifier="occurredAt" type="java.util.Date">
+                    <persistence type="property"/>
+                    <modifiers optional="false" write="false"/>
+                </attribute>
+            </attributes>
+            <indexes>
+                <index name="ccInterestCustomerTime">
+                    <key attribute="customer"/>
+                    <key attribute="occurredAt"/>
+                </index>
+            </indexes>
+        </itemtype>
+
+        <!-- A7: feedback is a separate table; no customer, no text. -->
+        <itemtype code="CCFeedback" autocreate="true" generate="true">
+            <deployment table="ccfeedback" typecode="14103"/>
+            <attributes>
+                <attribute qualifier="responseId" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers optional="false" write="false"/>
+                </attribute>
+                <attribute qualifier="rating" type="CCFeedbackRating">
+                    <persistence type="property"/>
+                    <modifiers optional="false" write="false"/>
+                </attribute>
+                <attribute qualifier="intent" type="java.lang.String">
+                    <persistence type="property"/>
+                </attribute>
+                <attribute qualifier="toolsUsed" type="java.lang.String">
+                    <persistence type="property"/>
+                    <description>Comma separated tool names.</description>
+                </attribute>
+                <attribute qualifier="auditRef" type="java.lang.String">
+                    <persistence type="property"/>
+                </attribute>
+                <attribute qualifier="createdAt" type="java.util.Date">
+                    <persistence type="property"/>
+                    <modifiers optional="false" write="false"/>
+                </attribute>
+            </attributes>
+        </itemtype>
+
+        <!-- A10: margin lives in its own type; Backoffice access restricted to group ccbusinessmanagergroup. -->
+        <itemtype code="CCProductBusinessAttribute" autocreate="true" generate="true">
+            <deployment table="ccproductbusinessattr" typecode="14104"/>
+            <attributes>
+                <attribute qualifier="product" type="Product">
+                    <persistence type="property"/>
+                    <modifiers optional="false" unique="true" initial="true"/>
+                </attribute>
+                <attribute qualifier="priority" type="java.lang.Integer">
+                    <persistence type="property"/>
+                    <defaultvalue>Integer.valueOf(0)</defaultvalue>
+                </attribute>
+                <attribute qualifier="margin" type="java.lang.Long">
+                    <persistence type="property"/>
+                    <description>Margin in minor currency units. Never sent to a model or a customer.</description>
+                </attribute>
+                <attribute qualifier="packCode" type="java.lang.String">
+                    <persistence type="property"/>
+                </attribute>
+            </attributes>
+        </itemtype>
+
+        <itemtype code="CCUsageCounter" autocreate="true" generate="true">
+            <deployment table="ccusagecounter" typecode="14105"/>
+            <attributes>
+                <attribute qualifier="customer" type="Customer">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true"/>
+                </attribute>
+                <attribute qualifier="periodKey" type="java.lang.String">
+                    <persistence type="property"/>
+                    <modifiers optional="false" initial="true"/>
+                </attribute>
+                <attribute qualifier="messageCount" type="java.lang.Integer">
+                    <persistence type="property"/>
+                    <defaultvalue>Integer.valueOf(0)</defaultvalue>
+                </attribute>
+                <attribute qualifier="tokenCount" type="java.lang.Long">
+                    <persistence type="property"/>
+                    <defaultvalue>Long.valueOf(0)</defaultvalue>
+                </attribute>
+            </attributes>
+            <indexes>
+                <index name="ccUsageUq" unique="true">
+                    <key attribute="customer"/>
+                    <key attribute="periodKey"/>
+                </index>
+            </indexes>
+        </itemtype>
+    </itemtypes>
+</items>

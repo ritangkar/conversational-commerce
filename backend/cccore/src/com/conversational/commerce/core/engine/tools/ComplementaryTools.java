@@ -21,13 +21,13 @@ public final class ComplementaryTools
 
     public abstract static class Base implements ChatTool
     {
-        @Resource
+        @Resource(name = "ccCoPurchaseGateway")
         protected CoPurchaseGateway coPurchaseGateway;
 
-        @Resource
+        @Resource(name = "ccBusinessRanker")
         protected BusinessRanker businessRanker;
 
-        @Resource
+        @Resource(name = "ccConfigurationService")
         protected CcConfigurationService configurationService;
 
         protected final CoPurchaseRule rule = new CoPurchaseRule();

@@ -22,10 +22,10 @@ public class DecisionValidator
     private static final Pattern CODE = Pattern.compile("[A-Z]{2,4}-\\d{3,6}");
     private static final double MAX_AMOUNT = 10_000_000_000.0;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     public void setConfigurationService(final CcConfigurationService c)

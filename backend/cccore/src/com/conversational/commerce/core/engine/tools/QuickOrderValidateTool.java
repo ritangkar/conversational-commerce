@@ -26,7 +26,7 @@ public class QuickOrderValidateTool implements ChatTool
     {
     }
 
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
     private final QuickOrderParser parser = new QuickOrderParser();

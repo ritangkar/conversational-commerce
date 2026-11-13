@@ -19,7 +19,7 @@ public class ComparisonTool implements ChatTool
 {
     public static final String MISSING = "Not available";
 
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
     public void setCatalogGateway(final CatalogGateway catalogGateway)

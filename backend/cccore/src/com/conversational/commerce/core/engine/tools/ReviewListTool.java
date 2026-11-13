@@ -24,19 +24,19 @@ import java.util.Map;
 /** Basket review (PA-06) over the browser-held list. The list is untrusted: it is re-validated against the catalogue here (A11). */
 public class ReviewListTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
-    @Resource
+    @Resource(name = "ccOrderGateway")
     private OrderGateway orderGateway;
 
-    @Resource
+    @Resource(name = "ccCoPurchaseGateway")
     private CoPurchaseGateway coPurchaseGateway;
 
-    @Resource
+    @Resource(name = "ccBusinessRanker")
     private BusinessRanker businessRanker;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     private final ReplenishmentRule replenishment = new ReplenishmentRule();

@@ -17,13 +17,13 @@ public class RetentionService
         int purgeUsageCountersBefore(Instant cutoff);
     }
 
-    @Resource
+    @Resource(name = "ccRetentionStore")
     private RetentionStore retentionStore;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     public void setRetentionStore(final RetentionStore s)

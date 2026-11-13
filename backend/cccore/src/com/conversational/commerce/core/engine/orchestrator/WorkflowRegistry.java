@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public class WorkflowRegistry
 {
-    @Resource
+    @Resource(name = "ccWorkflowTemplates")
     private List<WorkflowTemplate> workflows;
 
     public void setWorkflows(final List<WorkflowTemplate> workflows)

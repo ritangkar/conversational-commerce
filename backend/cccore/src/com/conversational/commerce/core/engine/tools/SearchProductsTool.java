@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class SearchProductsTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
     public void setCatalogGateway(final CatalogGateway catalogGateway)

@@ -17,10 +17,10 @@ import java.util.OptionalLong;
 /** Budget planner (PA-04). Candidates come from this turn's history results; prices stay in Java. */
 public class PlanBudgetTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccPriceGateway")
     private PriceGateway priceGateway;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     private final BudgetPlanner planner = new BudgetPlanner();

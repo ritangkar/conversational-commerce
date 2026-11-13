@@ -18,7 +18,7 @@ import java.util.Map;
 /** FIND_PRODUCT (SC-02): search, optional budget filter in Java, relevance judge, hydrate. */
 public class FindProductWorkflow extends AbstractWorkflow
 {
-    @Resource
+    @Resource(name = "ccRelevanceJudge")
     private RelevanceJudge relevanceJudge;
 
     public void setRelevanceJudge(final RelevanceJudge j)

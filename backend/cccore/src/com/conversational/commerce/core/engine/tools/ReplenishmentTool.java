@@ -15,10 +15,10 @@ import java.util.Map;
 
 public class ReplenishmentTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccOrderGateway")
     private OrderGateway orderGateway;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     private final ReplenishmentRule rule = new ReplenishmentRule();

@@ -14,7 +14,7 @@ import java.util.Optional;
 /** Resolves codes against the active pack's catalogue and returns approved fields only (name, description, attributes). */
 public class ProductDetailsTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
     public void setCatalogGateway(final CatalogGateway catalogGateway)

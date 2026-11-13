@@ -15,7 +15,7 @@ import java.util.Map;
 /** FAQ (KN-01, D16): lexical shortlist, model picks ids, the answer is the approved text, never model prose. */
 public class FaqWorkflow extends AbstractWorkflow
 {
-    @Resource
+    @Resource(name = "ccRelevanceJudge")
     private RelevanceJudge relevanceJudge;
 
     public void setRelevanceJudge(final RelevanceJudge j)

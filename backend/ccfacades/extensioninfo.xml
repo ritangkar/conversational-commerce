@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ASSUMPTION: standard extensioninfo layout; ccocc should be generated from the yocc template and merged (spike S1). -->
+<extensioninfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="extensioninfo.xsd">
+    <extension name="ccfacades">
+        <requires-extension name="cccore"/><requires-extension name="commercefacades"/>
+    </extension>
+</extensioninfo>

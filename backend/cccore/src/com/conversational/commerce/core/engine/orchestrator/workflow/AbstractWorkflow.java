@@ -11,13 +11,13 @@ import java.util.Map;
 
 public abstract class AbstractWorkflow implements WorkflowTemplate
 {
-    @Resource
+    @Resource(name = "ccToolRegistry")
     protected ToolRegistry toolRegistry;
 
-    @Resource
+    @Resource(name = "ccHydrator")
     protected Hydrator hydrator;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     protected CcConfigurationService configurationService;
 
     public void setToolRegistry(final ToolRegistry r)

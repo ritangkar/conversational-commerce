@@ -37,27 +37,27 @@ public class DefaultChatOrchestrationService implements ChatOrchestrationService
     private static final java.util.Set<String> UNRESOLVED = java.util.Set.of("find_none", "faq_none", "qa_none", "order_none",
             "reorder_none", "next_order_none", "unsupported");
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
-    @Resource
+    @Resource(name = "ccSanitiser")
     private Sanitiser sanitiser;
-    @Resource
+    @Resource(name = "ccModelRouter")
     private ModelRouter modelRouter;
-    @Resource
+    @Resource(name = "ccPromptRepository")
     private PromptRepository promptRepository;
-    @Resource
+    @Resource(name = "ccDecisionValidator")
     private DecisionValidator decisionValidator;
-    @Resource
+    @Resource(name = "ccWorkflowRegistry")
     private WorkflowRegistry workflowRegistry;
-    @Resource
+    @Resource(name = "ccComposer")
     private Composer composer;
-    @Resource
+    @Resource(name = "ccTranslateStep")
     private TranslateStep translateStep;
-    @Resource
+    @Resource(name = "ccUsageCapService")
     private UsageCapService usageCapService;
-    @Resource
+    @Resource(name = "ccInterestEventService")
     private InterestEventService interestEventService;
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     private final LanguageDetector languageDetector = new LanguageDetector();

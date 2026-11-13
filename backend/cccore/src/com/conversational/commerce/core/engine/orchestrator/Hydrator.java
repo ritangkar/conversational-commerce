@@ -18,13 +18,13 @@ import java.util.OptionalLong;
 /** Adds names, customer prices, images and labelled demo stock after the model is done (D26). Prices never go to a model. */
 public class Hydrator
 {
-    @Resource
+    @Resource(name = "ccCatalogGateway")
     private CatalogGateway catalogGateway;
 
-    @Resource
+    @Resource(name = "ccPriceGateway")
     private PriceGateway priceGateway;
 
-    @Resource
+    @Resource(name = "ccStockGateway")
     private StockGateway stockGateway;
 
     public void setCatalogGateway(final CatalogGateway g)

@@ -22,13 +22,13 @@ import java.util.UUID;
  */
 public class WelcomeService
 {
-    @Resource
+    @Resource(name = "ccToolRegistry")
     private ToolRegistry toolRegistry;
 
-    @Resource
+    @Resource(name = "ccHydrator")
     private Hydrator hydrator;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     public void setToolRegistry(final ToolRegistry r)

@@ -8,10 +8,10 @@ import java.time.LocalDate;
 /** Per-customer usage caps (PL-06). Runs before the decision call; over the cap means no model call. */
 public class UsageCapService
 {
-    @Resource
+    @Resource(name = "ccUsageCounterStore")
     private UsageCounterStore usageCounterStore;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     public void setUsageCounterStore(final UsageCounterStore s)

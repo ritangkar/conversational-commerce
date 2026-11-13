@@ -14,7 +14,7 @@ import java.util.Optional;
  */
 public class BusinessRanker
 {
-    @Resource
+    @Resource(name = "ccBusinessAttributeGateway")
     private BusinessAttributeGateway businessAttributeGateway;
 
     public void setBusinessAttributeGateway(final BusinessAttributeGateway gateway)

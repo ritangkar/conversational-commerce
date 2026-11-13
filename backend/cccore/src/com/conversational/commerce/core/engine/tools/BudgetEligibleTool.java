@@ -14,7 +14,7 @@ import java.util.OptionalLong;
 /** Returns eligible codes only. Prices are evaluated in Java and never returned to the model (D06, D26). */
 public class BudgetEligibleTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccPriceGateway")
     private PriceGateway priceGateway;
 
     public void setPriceGateway(final PriceGateway priceGateway)

@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class StockInfoTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccStockGateway")
     private StockGateway stockGateway;
 
     public void setStockGateway(final StockGateway stockGateway)

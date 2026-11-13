@@ -16,7 +16,7 @@ import java.util.Set;
 /** FAQ only from approved content (D16). Two modes: "shortlist" (lexical) and "answer" (entry ids chosen from the shortlist). */
 public class FaqTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccFaqGateway")
     private FaqGateway faqGateway;
 
     public void setFaqGateway(final FaqGateway faqGateway)

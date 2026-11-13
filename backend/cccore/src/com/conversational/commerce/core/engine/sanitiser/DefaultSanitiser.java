@@ -24,10 +24,10 @@ public class DefaultSanitiser implements Sanitiser
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
-    @Resource
+    @Resource(name = "ccSanitisationRules")
     private List<SanitisationRule> rules;
 
     private final FieldPolicy fieldPolicy = new FieldPolicy();

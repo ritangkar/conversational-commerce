@@ -21,7 +21,7 @@ public class PurchaseHistoryTool implements ChatTool
     {
     }
 
-    @Resource
+    @Resource(name = "ccOrderGateway")
     private OrderGateway orderGateway;
 
     public void setOrderGateway(final OrderGateway orderGateway)

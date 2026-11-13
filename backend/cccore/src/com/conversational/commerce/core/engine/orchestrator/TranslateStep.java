@@ -24,13 +24,13 @@ public class TranslateStep
     private static final Pattern PROTECTED = Pattern.compile("[A-Z]{2,4}-\\d{3,6}|\\d[\\d,.]*\\d|\\d|INR");
     private static final Pattern TOKEN = Pattern.compile("\\[P\\d+]");
 
-    @Resource
+    @Resource(name = "ccSanitiser")
     private Sanitiser sanitiser;
 
-    @Resource
+    @Resource(name = "ccModelRouter")
     private ModelRouter modelRouter;
 
-    @Resource
+    @Resource(name = "ccPromptRepository")
     private PromptRepository promptRepository;
 
     public void setSanitiser(final Sanitiser s)

@@ -13,10 +13,10 @@ import java.util.Map;
 
 public class PatternChangeTool implements ChatTool
 {
-    @Resource
+    @Resource(name = "ccOrderGateway")
     private OrderGateway orderGateway;
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
     private final PatternChangeRule rule = new PatternChangeRule();

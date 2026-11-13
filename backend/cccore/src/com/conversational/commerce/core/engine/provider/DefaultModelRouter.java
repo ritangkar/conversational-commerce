@@ -12,10 +12,10 @@ public class DefaultModelRouter implements ModelRouter
 {
     private static final Logger LOG = LogManager.getLogger(DefaultModelRouter.class);
 
-    @Resource
+    @Resource(name = "ccConfigurationService")
     private CcConfigurationService configurationService;
 
-    @Resource
+    @Resource(name = "ccModelAdapters")
     private List<ModelProviderAdapter> adapters;
 
     public void setConfigurationService(final CcConfigurationService configurationService)

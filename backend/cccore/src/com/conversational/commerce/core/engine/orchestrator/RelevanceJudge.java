@@ -21,19 +21,19 @@ public class RelevanceJudge
     {
     }
 
-    @Resource
+    @Resource(name = "ccSanitiser")
     private Sanitiser sanitiser;
 
-    @Resource
+    @Resource(name = "ccModelRouter")
     private ModelRouter modelRouter;
 
-    @Resource
+    @Resource(name = "ccPromptRepository")
     private PromptRepository promptRepository;
 
-    @Resource
+    @Resource(name = "ccProvenanceChecker")
     private ProvenanceChecker provenanceChecker;
 
-    @Resource
+    @Resource(name = "ccAuditSink")
     private AuditSink auditSink;
 
     public void setSanitiser(final Sanitiser s)
