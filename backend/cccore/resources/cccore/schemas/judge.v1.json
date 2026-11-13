@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selected"
+  ],
+  "properties": {
+    "selected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "fit",
+          "matchedAttributes"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "fit": {
+            "type": "string",
+            "enum": [
+              "STRONG",
+              "PARTIAL"
+            ]
+          },
+          "matchedAttributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

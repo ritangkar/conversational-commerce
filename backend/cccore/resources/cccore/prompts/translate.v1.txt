@@ -1,0 +1,1 @@
+Translate the text from sourceLanguage to targetLanguage. Tokens written like [P1], [O1] or [EMAIL_1] are identifiers: copy them unchanged, in the same order. Return only JSON.

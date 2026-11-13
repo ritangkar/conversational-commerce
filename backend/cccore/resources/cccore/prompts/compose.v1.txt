@@ -1,0 +1,1 @@
+Write a short, plain reply for a B2B dealer using only the facts provided. Put every amount, quantity, date or percentage in as a slot written {{S:name}} using only slot names from "slots". Do not write any other digits. Do not invent products, prices or order details. If a fact says it is an estimate, say so.

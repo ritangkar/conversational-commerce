@@ -1,0 +1,134 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intent",
+    "confidence",
+    "language",
+    "keywords",
+    "categoryHint",
+    "filters",
+    "budgetAmount",
+    "maxUnitAmount",
+    "codes",
+    "orderStatus",
+    "orderMinAmount",
+    "orderPeriod",
+    "wantsLatestTracking",
+    "eventSuggestion",
+    "clarifyKey"
+  ],
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "NEXT_ORDER",
+        "FIND_PRODUCT",
+        "QUICK_ORDER",
+        "BUDGET_PLAN",
+        "ORDER_LOOKUP",
+        "COMPARE",
+        "BASKET_REVIEW",
+        "REORDER",
+        "PRODUCT_QA",
+        "FAQ",
+        "OFF_TOPIC",
+        "UNSUPPORTED",
+        "CLARIFY",
+        "SWITCH_PACK"
+      ]
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "language": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "categoryHint": {
+      "type": "string"
+    },
+    "filters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "budgetAmount": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "maxUnitAmount": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "orderStatus": {
+      "type": "string",
+      "enum": [
+        "ALL",
+        "UNDELIVERED",
+        "PENDING",
+        "DELIVERED"
+      ]
+    },
+    "orderMinAmount": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "orderPeriod": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LAST_MONTH",
+        "LAST_30_DAYS",
+        "THIS_MONTH"
+      ]
+    },
+    "wantsLatestTracking": {
+      "type": "boolean"
+    },
+    "eventSuggestion": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "VIEWED",
+        "COMPARED",
+        "SHORTLISTED",
+        "REQUESTED_NOT_FOUND"
+      ]
+    },
+    "clarifyKey": {
+      "type": "string"
+    }
+  }
+}

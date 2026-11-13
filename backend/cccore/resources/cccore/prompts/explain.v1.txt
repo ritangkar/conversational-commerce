@@ -1,0 +1,1 @@
+Explain the comparison to the dealer using only the table provided. Mention only attribute values that appear in the table. Where data is missing say you cannot verify it. Do not mention prices.

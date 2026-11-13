@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "sourceLanguage",
+    "targetLanguage"
+  ],
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "sourceLanguage": {
+      "type": "string"
+    },
+    "targetLanguage": {
+      "type": "string"
+    }
+  }
+}
