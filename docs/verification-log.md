@@ -15,3 +15,4 @@ Rule: verify platform and provider facts before relying on them; record source a
 | 2026-11-13 | Spartacus `AuthService`, `UserIdService`, `AuthGuard` | author's memory; local type stubs only | **UNVERIFIED** |
 | 2026-11-13 | Angular 19 strict-template compile of all components | `ngc` run in this repository | **Verified** (compile only) |
 | 2026-11-13 | WCAG contrast ratios of the token pairs | `tools/ci/contrast.py` run in this repository | **Verified** by computation; hex values still need PwC confirmation |
+| 2026-11-13 | `ChatDataAssembler` compiles against POJOs generated from `tools/beangen/beans.json` (ad hoc, not committed) | local javac run | **Verified** (compile only; platform-generated beans may differ) |
