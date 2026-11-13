@@ -55,7 +55,7 @@ public class DemoDataset implements CatalogGateway, PriceGateway, OrderGateway, 
     private final Map<String, Map<String, Integer>> pairs = new HashMap<>();
     private final Map<String, BusinessAttribute> business = new HashMap<>();
     private final List<Faq> faqs = new ArrayList<>();
-    private final List<Event> events = new ArrayList<>();
+    private final List<Event> events = java.util.Collections.synchronizedList(new ArrayList<>());
     private final Map<String, long[]> counters = new ConcurrentHashMap<>();
 
     public DemoDataset(final LocalDate today)

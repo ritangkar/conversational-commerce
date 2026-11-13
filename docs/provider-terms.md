@@ -1,0 +1,5 @@
+# Provider terms note
+
+Facts from the design (checked 2026-11-13, not re-verified by implementation): free-tier Gemini may use submitted content to improve Google products, so it is for synthetic data only. The `syntheticDataOnly` flag (A2) makes the router refuse any provider whose `cc.provider.<code>.tier` is `free` on a site where the flag is false (tested in `ProviderContractTest`). For client data use paid or zero-data-retention terms. OpenAI: the adapter sets `store=false`. Anthropic: the design records 30-day deletion for the API and that Fable 5 / Mythos 5 require 30-day retention and are excluded from ZDR; do not route ZDR clients to those models. Model IDs are configuration (`route.<task>.model`), never code. A 7-day Anthropic retention claim from third-party sites is unresolved and must not be quoted.
+
+Provider terms change. Re-check at design freeze and before any demo with real data. Provider request shapes in the adapters are from memory and UNVERIFIED (see `verification-log.md`).

@@ -14,3 +14,10 @@ Nothing below has been applied beyond what is stated.
 | N8 | PwC base theme with pack accents only | D32, part6 | Implement as designed | Flagged; hex values to be confirmed against PwC brand portal |
 | M1-M13 | Missing examples (docs/examples/MISSING_EXAMPLES.md) | conventions | Needed per stage | Assumptions in assumptions.md |
 | B1 | Build environment with a licensed SAP Commerce installation for Stages 3-10 | delivery | None available in this session | Owner to provide or run commands |
+| B2 | Licence for the public repository | D01 | Not chosen; no `LICENSE` added | none |
+| B3 | Interpretation of A1 for PL-03/PL-04 toggles (AS-14) and partial results on limits (AS-15) | A1, D13 | Documented in assumptions | as implemented |
+| B4 | Quick order without model parse of residual lines (AS-16) | PA-03 | Trade-off: fewer model calls, unresolved lines go back to the dealer | as implemented |
+| B5 | HTTP-level S7 and S1/S2/S3/S4/S5/S6/S8 not run | acceptance | See `docs/spikes/` | no spike branch that changes a protected decision was triggered or applied |
+
+Protected decisions D01-D37 were not changed. N3 (welcome caching) is not implemented; N8 (PwC theme) is implemented as designed and flagged in `docs/theming.md`.
+
