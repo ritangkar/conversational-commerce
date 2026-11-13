@@ -315,7 +315,7 @@ public class DefaultChatOrchestrationService implements ChatOrchestrationService
                 state.listener.onEvent(ChatEvent.block(block));
             }
         }
-        state.listener.onEvent(ChatEvent.done());
+        state.listener.onEvent(ChatEvent.done(state.responseId, List.copyOf(state.trace)));
         usageCapService.recordTokens(state.customerId, state.today, state.tokensIn.get() + state.tokensOut.get());
         auditSink.log(AuditEvent.of("turn_completed").with("responseId", state.responseId).with("intent", intent.name())
                 .with("workflow", intent.name()).with("tokensIn", state.tokensIn.get()).with("tokensOut", state.tokensOut.get())

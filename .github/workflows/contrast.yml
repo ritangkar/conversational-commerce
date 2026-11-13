@@ -5,6 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Contrast check
-        run: |
-          if [ -f tools/ci/contrast.py ]; then python3 tools/ci/contrast.py; else echo "::notice::contrast check not created yet (Stage 8, part6)"; fi
+      - run: python3 -I tools/ci/contrast.py

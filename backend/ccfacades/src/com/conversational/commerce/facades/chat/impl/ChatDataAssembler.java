@@ -74,6 +74,8 @@ public class ChatDataAssembler
         data.setBlock(event.block() == null ? null : toBlock(event.block()));
         data.setDelta(event.delta());
         data.setCode(event.code());
+        data.setResponseId(event.responseId());
+        data.setTrace(map(event.trace(), this::toTrace));
         return data;
     }
 

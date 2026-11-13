@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Regenerate and diff
+      - name: Regenerate and require byte-identical output
         run: |
-          if [ -f tools/packgen/generate.py ]; then python3 tools/packgen/generate.py && git diff --exit-code; else echo "::notice::packgen not created yet (Stage 9)"; fi
+          python3 -I tools/packgen/generate.py
+          git diff --exit-code
+      - run: python3 -I tools/packgen/test_generate.py

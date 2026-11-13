@@ -1,0 +1,73 @@
+import { InjectionToken } from '@angular/core';
+
+/** Static UI labels (English). The Spartacus adapter overrides CC_LABEL_RESOLVER to use i18n; chat text is model output and is not here. */
+export const DEFAULT_LABELS: Record<string, string> = {
+  'page.title': 'AI purchasing assistant',
+  'page.skip': 'Skip to the message box',
+  'composer.label': 'Message the assistant',
+  'composer.hint': 'Please do not type personal data such as emails or phone numbers.',
+  'composer.send': 'Send',
+  'composer.stop': 'Stop',
+  'thread.label': 'Conversation',
+  'thread.empty': 'Ask about products, your next order or your orders.',
+  'step.understanding': 'Understanding your request…',
+  'step.checkingHistory': 'Checking your order history…',
+  'step.lookingForComplements': 'Looking for items bought together…',
+  'step.searchingCatalogue': 'Searching the catalogue…',
+  'step.applyingPriceLimit': 'Applying your price limit…',
+  'step.judgingFit': 'Checking how well products fit…',
+  'step.readingYourList': 'Reading your list…',
+  'step.fittingBudget': 'Fitting your budget…',
+  'step.searchingOrders': 'Searching your orders…',
+  'step.checkingDelivery': 'Checking the delivery status…',
+  'step.comparingAttributes': 'Comparing attributes…',
+  'step.reviewingYourList': 'Reviewing your list…',
+  'step.findingOrder': 'Finding your order…',
+  'step.writingReply': 'Writing the reply…',
+  'step.translating': 'Translating…',
+  'step.searchingApprovedAnswers': 'Searching approved answers…',
+  'step.pickingAnswer': 'Picking the best answer…',
+  'step.readingApprovedAnswer': 'Reading the approved answer…',
+  'step.readingProductData': 'Reading product data…',
+  'card.add': 'Add to purchase list',
+  'card.demoStock': 'Demo stock',
+  'card.compare': 'Add to comparison',
+  'list.title': 'Purchase list',
+  'list.demoLabel': 'Demo purchase list, not your cart',
+  'list.checkout': 'Go to the storefront to check out',
+  'list.empty': 'Your list is empty.',
+  'list.quantity': 'Quantity for',
+  'list.remove': 'Remove',
+  'estimate.label': 'Estimate',
+  'reason.DUE': 'Due by your usual rhythm',
+  'reason.OVERDUE': 'Overdue by your usual rhythm',
+  'reason.FORGOTTEN_USUAL': 'You usually order this',
+  'reason.DUPLICATE_OF_PENDING': 'Already in a pending order',
+  'reason.COMPLEMENT': 'Often bought together',
+  'welcome.title': 'Since your last visit',
+  'welcome.due': 'Probably due: {{name}} ({{code}}), about {{quantity}} (estimate)',
+  'welcome.pending': 'You have {{count}} pending orders',
+  'welcome.patternChange': '{{name}} ({{code}}): your recent orders changed by {{percent}}% ({{earlierAverage}} to {{recentAverage}})',
+  'feedback.up': 'Good answer',
+  'feedback.down': 'Not helpful',
+  'feedback.thanks': 'Thanks for the feedback',
+  'why.title': 'Why this?',
+  'why.source': 'Source',
+  'why.window': 'Period',
+  'why.threshold': 'Rule',
+  'notice.usageCap': 'You have reached your usage limit for now.',
+  'notice.unavailableNotice': 'The assistant is not available right now.',
+  'notice.partialNotice': 'Only part of this request could be completed.',
+  'notice.translationFailed': 'The reply is shown in English.',
+  'notice.toolRejected': 'I could not run that request. Please rephrase it.',
+  'interest.title': 'About suggestions',
+  'error.generic': 'Something went wrong. You can try again.',
+  'compare.notAvailable': 'Not available'
+};
+
+export type LabelResolver = (key: string, params?: Record<string, string | number>) => string;
+
+export const defaultResolver: LabelResolver = (key, params) =>
+  (DEFAULT_LABELS[key] ?? key).replace(/\{\{(\w+)}}/g, (_, p) => String(params?.[p] ?? ''));
+
+export const CC_LABEL_RESOLVER = new InjectionToken<LabelResolver>('CC_LABEL_RESOLVER', { providedIn: 'root', factory: () => defaultResolver });

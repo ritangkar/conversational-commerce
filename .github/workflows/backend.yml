@@ -1,12 +1,22 @@
 name: backend
 on: [push, pull_request]
 jobs:
-  build-test:
+  engine:
+    name: Platform-independent engine tests (no SAP needed)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: SAP Commerce platform check
-        run: |
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: python3 tools/beangen/generate.py --check
+      - run: backend/cccore/tools-run.sh
+  platform:
+    name: SAP Commerce build (needs a licensed platform)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
           # SAP Commerce binaries are licensed and not in this repo (docs/assumptions.md AS-09).
-          # Provide a platform via a self-hosted runner or private artifact, then replace this step with the ant build + unit tests.
-          echo "::notice::Backend build skipped: no SAP Commerce platform available in CI yet."
+          # dao/, platform/, job/, ccfacades, ccocc, ccsampledata are NOT compiled by CI until a platform is provided
+          # (self-hosted runner or private artifact). Replace this step with the ant build and platform tests.
+          echo "::notice::SAP-bound modules are not built in CI yet."

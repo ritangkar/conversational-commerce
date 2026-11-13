@@ -123,6 +123,8 @@
         <property name="block" type="com.conversational.commerce.occ.chat.ChatBlockWsDTO"/>
         <property name="delta" type="java.lang.String"/>
         <property name="code" type="java.lang.String"/>
+        <property name="responseId" type="java.lang.String"/>
+        <property name="trace" type="java.util.List<com.conversational.commerce.occ.chat.TraceStepWsDTO>"/>
     </bean>
 
     <bean class="com.conversational.commerce.occ.chat.FeedbackWsDTO">
