@@ -1,0 +1,38 @@
+{
+ "code-bundle-backend-cccore-engine.json": {
+  "files": 108,
+  "bytes": 261287
+ },
+ "code-bundle-backend-cccore-engine-tests.json": {
+  "files": 12,
+  "bytes": 89823
+ },
+ "code-bundle-backend-cccore-sap-bound.json": {
+  "files": 49,
+  "bytes": 106788
+ },
+ "code-bundle-backend-other-modules.json": {
+  "files": 28,
+  "bytes": 76846
+ },
+ "code-bundle-storefront.json": {
+  "files": 41,
+  "bytes": 91194
+ },
+ "code-bundle-tools-and-ci.json": {
+  "files": 16,
+  "bytes": 55373
+ },
+ "code-bundle-github-workflows.json": {
+  "files": 5,
+  "bytes": 3295
+ },
+ "code-bundle-docs.json": {
+  "files": 28,
+  "bytes": 64292
+ },
+ "code-bundle-repo-root.json": {
+  "files": 7,
+  "bytes": 6571
+ }
+}

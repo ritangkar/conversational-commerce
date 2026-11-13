@@ -1,0 +1,152 @@
+{
+  "document": "UC1 handoff: context for a new Claude chat on a SAP Commerce machine",
+  "generated_on": "2026-11-13",
+  "from": "Claude Code cloud session (no SAP Commerce, no provider keys, no browser)",
+  "how_to_use": "Paste this file first. Then restore the code (see code_access). Then follow next_steps in order. Everything marked UNVERIFIED was written from memory and must be checked against the real platform before it is trusted.",
+  "new_chat_prompt": "You are continuing the UC1 build (SAP Commerce AI-First Conversational B2B Commerce Accelerator) from a handoff. Read this JSON fully. Rules that never bend: the owner's conventions are binding (see conventions); protected decisions D01-D37 never change without owner approval; unknown conventions are asked about, never invented; AI never sees prices, margin, names, emails, internal PKs or other customers' data and has no write tool; customer identity comes only from the Spring Security context; every external model call goes through the sanitiser; no keys, real data or client-specific models in the repo; logs never contain prompts, message text or personal data. Separate facts, assumptions and recommendations in everything you write. I am on a machine that has SAP Commerce: start with next_steps item 1 and report real compile errors back instead of guessing.",
+  "code_access": {
+    "repository": "https://github.com/ritangkar/conversational-commerce",
+    "branch": "main (everything is pushed; last commits: docs/handoff bundle after 108eb28)",
+    "preferred": "git clone the repository. It contains everything below plus docs/design (design inputs) and docs/examples (owner samples).",
+    "fallback_bundles": "docs/handoff/code-bundle-*.json hold every hand-written file as {path: content} with sha256. Restore: python3 tools/handoff/restore.py <target-dir> docs/handoff/code-bundle-*.json. A hash mismatch means a damaged paste.",
+    "not_in_bundles": "docs/design/* (read from the repo: UC1_Stage3_Handoff.json and parts 1-6), docs/examples/*, and generated files. Regenerate with: python3 tools/packgen/generate.py ; python3 tools/beangen/generate.py ; python3 tools/ci/tokens.py",
+    "bundle_index": {
+      "code-bundle-backend-cccore-engine.json": "108 files, platform-independent engine source (verified by tests)",
+      "code-bundle-backend-cccore-engine-tests.json": "12 files, JUnit tests, fake provider, dummy dataset",
+      "code-bundle-backend-cccore-sap-bound.json": "49 files incl. items.xml, spring xml, DAOs, platform gateways, job, resources, prompts, schemas (NOT compiled)",
+      "code-bundle-backend-other-modules.json": "ccfacades, ccocc, ccbackoffice, ccsampledata (NOT compiled)",
+      "code-bundle-storefront.json": "Angular feature library + tests",
+      "code-bundle-tools-and-ci.json": "packgen, beangen, ci scripts, handoff tools",
+      "code-bundle-github-workflows.json": "5 workflows",
+      "code-bundle-docs.json": "project docs written in this session",
+      "code-bundle-repo-root.json": "README, CLAUDE.md, SECURITY, etc."
+    }
+  },
+  "product": {
+    "name": "UC1 SAP Commerce AI-First Conversational B2B Commerce Accelerator",
+    "summary": "Public-repo drop-in module for a client's SAP Commerce OCC, facade and core layers plus a Spartacus lazy-loaded feature: a full-page ChatGPT/Claude-style purchasing assistant for logged-in B2B dealers. AI interprets and communicates; SAP Commerce Java is the executor of record. Excluded: promotions, AI-generated queries, AI-placed orders, separate authentication, persisted chat history, photo search, voice, human handoff.",
+    "package_base": "com.conversational.commerce",
+    "bean_prefix": "cc",
+    "item_prefix": "CC",
+    "extensions": ["cccore", "ccfacades", "ccocc", "ccbackoffice", "ccsampledata"],
+    "assumed_versions_owner_to_confirm": "SAP Commerce 2211-jdk21 (Jakarta, Spring 6), Angular 19, Node 22 (A12). Names cc/CC/cccore... derived (N1)."
+  },
+  "protected_decisions_summary": "D01 public repo/no secrets; D02 local demo seeded dummy data; D03 Add to Cart = labelled placeholder list, AI never orders; D04 dealer persona; D05 search by code/description/use case/constraints; D06 deterministic backend search, AI extracts/judges, price/stock in backend; D07 session-only memory; D08 interest events in own table, on by default with notice, toggle, 90-day retention; D09 full-page + welcome panel; D10 order tracking from Commerce-held data only; D11 simple rule-based replenishment; D12 pattern change detection; D13 every capability toggleable (fail-closed for PL-01/03/04/05); D15 cross-sell deterministic, AI explains; D16 FAQ only approved content; D17 multilingual translate in/process English/translate out, identifiers never translated; D18 provider/model per task (Gemini, Anthropic, OpenAI); D19 keys only in secure properties; D21 comparison/compatibility; D22 reorder; D23 ten scenarios; D24 business controls, margin never to LLM/customers; D25 quantity recs/basket optimisation; D26 AI returns IDs only, backend hydrates; D27 labelled demo stock with live-stock hook; D28 off-topic redirected, unsupported declined; D29 live steps + streamed answer; D30 thumbs metadata only; D31 contact account manager text; D32 five packs, generators in repo, live switch, coexist; D33 own orders only; D34 own history only; D35 quick order, budget planner, substitution, order search, why-this, editable list; D36 <=10 s target, usage caps; D37 owner conventions binding, FUTURE SCOPE comments. Owner-approved: A1 fail-closed toggles, A2 synthetic-data-only guard, A3 NOT adopted, A4 pack dealers + all-packs dealer, A5 ROLE_CUSTOMERGROUP only with userId binding, A7 events/feedback separate tables, A9 AI suggests enum event types only, A10 margin separate item type, A11 browser-held list and context, A13 validate-then-reveal streaming, A14 audit as structured logs. Pending: N3 welcome caching (not implemented), N4 spike fallbacks changing protected decisions, N8 PwC theme (implemented as designed, flagged).",
+  "conventions": {
+    "source": "docs/design/part5_conventions_prompt_open_items.md section 7 and docs/examples/* (transcribed screenshots; TRUNCATED lines never reconstructed). fpp and Cpp in samples are placeholders.",
+    "binding": [
+      "Interface + DefaultX; XxxDao + XxxDaoImpl; *Data in facade beans XML; *WsDTO in occ beans XML",
+      "getDataMapper().map(source, Target.class[, fields]); controller calls facade only",
+      "Controller: @Controller, @RequestMapping(\"/{baseSiteId}/users/{userId}\"), @ApiVersion(\"v2\"), extends BaseController, @Secured, @PostMapping(value, consumes JSON), @ResponseBody, @ResponseStatus(OK), @Operation(operationId, summary, description), @ApiBaseSiteIdAndUserIdParam, @Parameter(description, required) @RequestBody final X request, @ApiFieldsParam @RequestParam(defaultValue = DEFAULT_FIELD_SET) final String fields. Deviation by A5: @Secured({ROLE_CUSTOMERGROUP}) only, plus @PathVariable userId for UserBindingGuard",
+      "@Resource(name = \"beanName\") on private fields; plain @Resource for platform services",
+      "Facade validates (StringUtils.isBlank, max length constant), IllegalArgumentException, trim, delegate",
+      "Service: property keys as private static final String, ConfigurationService.getConfiguration() with defaults, validateParameterNotNull",
+      "HTTP: shared java.net.http.HttpClient with connect timeout, per-request timeout from config, Jackson ObjectMapper",
+      "Errors: non-200 -> LOG.warn status only then SystemException; null content -> SystemException; InterruptedException restores flag",
+      "Logging: LogManager.getLogger; log status/metadata only",
+      "DAO: FlexibleSearchService for single lookups, PagedFlexibleSearchService + SortQueryData for paged; customer passed in and filtered in query; constants with {r:...} aliases and named parameters; buildFilterClause; createSortQuery with DEFAULT_SORT fallback; CollectionUtils.isNotEmpty(result.getResult()) ? get(0) : null; blank input returns null",
+      "Allman braces, final on parameters and locals",
+      "// FUTURE SCOPE: at unit-level order access (D33), unit-level replenishment (D34), live stock, real cart, carrier tracking"
+    ],
+    "unknown_never_invent": "Controller exception handling, Spring bean XML, items.xml, Backoffice config, populators/converters, tests, Angular/Spartacus, Javadoc style, imports of the sample, full truncated catch blocks and full DAO. Ask the owner; defaults I used are in docs/assumptions.md (AS-01..AS-19)."
+  },
+  "architecture": {
+    "principle": "Model proposes, Java validates/executes/hydrates, browser renders validated blocks.",
+    "turn_flow": "UserBindingGuard -> facade validation (sample style) -> UsageCapService + PL-04 -> language detect -> TranslateStep in (protected [Pn] tokens, 1 retry) -> Sanitiser (allow-list per task, NEVER fields, masking, OutboundGuard) -> ModelRouter DECIDE -> DecisionValidator -> WorkflowTemplate (deterministic tools via ToolRegistry, parallel groups, step/time/tool-call caps) -> Composer COMPOSE/EXPLAIN (slots only {{S:name}}, no loose digits, no unknown codes, text vs table check, else fixed template) -> blocks streamed, then text_delta, then done(responseId, trace)",
+    "security_invariants_with_tests": [
+      "No price/margin/uid/email in model payloads (SecurityTest.canaryValuesNeverAppearInOutboundPayloads)",
+      "SanitisedPayload has package-private constructor, so adapters cannot take unsanitised text",
+      "Tools take no customer argument; customer = TurnState.customerId (IsolationAndLoadTest)",
+      "Model IDs dropped unless a tool returned them this turn (ProvenanceChecker)",
+      "Audit keys whitelisted (AuditEvent.ALLOWED_KEYS); no prompts/message text",
+      "Sanitiser off => no model call (fail closed)"
+    ],
+    "layers": {
+      "engine (verified)": "backend/cccore/src/com/conversational/commerce/core/engine: config, gateway (SPIs), model (Domain, Blocks, Decision, Intent, Capabilities, TurnRequest/Result, ChatEvent), rules, sanitiser, provider (adapters, router), tools (20 tools), orchestrator (+ workflow/ 14 workflows)",
+      "sap-bound (NOT compiled)": "cccore resources/cccore-items.xml, cccore-spring.xml, project.properties; src/.../dao (+impl), platform/*Gateway, job/CcRetentionJob",
+      "ccfacades (NOT compiled)": "facade interfaces and Default* in src/.../facades/chat; ChatDataAssembler; resources/ccfacades-beans.xml (generated) and ccfacades-spring.xml",
+      "ccocc (NOT compiled)": "controllers (Chat incl. SSE, Welcome, Config, Feedback, PurchaseList), security/UserBindingGuard + SessionPropagator, resources/ccocc-beans.xml (generated), web spring xml",
+      "ccbackoffice (XML only)": "resources/ccbackoffice-backoffice-config.xml",
+      "ccsampledata (NOT loaded)": "setup/CcSampleDataSystemSetup, SampleOrderLoader; generated ImpEx + order plans under resources/ccsampledata/import",
+      "storefront/chat-feature": "src/lib/core (pure TS: models, sse-frame-parser, chat-api, chat-state, session-persistence, context-envelope, terminology), src/lib/ui (standalone components, ChatStore signals), src/lib/spartacus (auth adapter + module, UNVERIFIED), src/styles (tokens.json -> _tokens.scss)",
+      "tools": "packgen (generate.py, manifests/*.json 5 packs, schema, test_generate.py), beangen (beans.json single spec -> both beans XML), ci (secret-scan, selftest, contrast.py, tokens.py), handoff"
+    },
+    "stream_events": ["step_started", "step_completed", "block", "text_delta (stepId carries the block id)", "done (responseId, trace)", "error"],
+    "endpoints": ["POST /chat", "POST /chat/stream (SseEmitter, heartbeat comment hb, bounded executor, SessionPropagator)", "GET /chat/welcome", "GET /chat/config", "POST /chat/feedback", "POST /chat/purchase-list/validate"],
+    "spring_naming": "Own beans are ccXxx; @Resource(name=\"ccXxx\") on own types (a plain @Resource named configurationService would clash with the platform bean). List beans: ccConfigSources, ccSanitisationRules, ccModelAdapters, ccChatTools, ccWorkflowTemplates. Gateways use alias pattern ccDefaultXGateway + alias ccXGateway for client override.",
+    "config": "Layers highest first: Backoffice entries (BackofficeConfigSource), then properties/env (PropertiesConfigSource). Short TTL cache cc.config.cacheTtlSeconds (default 10). Keys: capability.<ID>.enabled for 43 IDs, orchestration.*, replenishment.*, patternChange.*, budget.candidateCap, crossSell.minSupport, bundle.minSupport, privacy.interestEvents.*, usage.cap.*, route.<task>.provider/model/fallback (EMPTY on purpose until model IDs are verified), pack.<p>.categories/searchFields/attributes/terminology/samplePrompts/themeTokens. cc.activePack and cc.syntheticDataOnly come from the CCConfiguration row."
+  },
+  "status": {
+    "verified_in_session": [
+      "Engine: 49 JUnit 5 tests pass (backend/cccore/tools-run.sh): SC-01..SC-10 on fake provider, canary leaks, isolation both directions, injection corpus, 400 concurrent turns, budget planner property test (2,000 cases), config fail-closed, TTL, usage caps, audit, provider contract tests on synthetic fixtures, router fallback and free-tier guard",
+      "Packgen: 7 Python tests (byte-identical regeneration, 43 toggles, fixtures, relative dates, example.invalid emails)",
+      "Storefront core: 13 vitest tests incl. real local HTTP SSE (incremental delivery, bearer, fallback on 500/no-done/silence, abort)",
+      "Angular 19 components compile under strictTemplates with ngc (against local Spartacus type stubs)",
+      "Contrast check passes (tokens + pack accents); secret scanner catches a planted key; ChatDataAssembler compiles against POJOs generated from beans.json (ad hoc)"
+    ],
+    "written_not_compiled_or_run": [
+      "cccore: items.xml, spring xml, DAOs, platform gateways, retention job",
+      "ccfacades (except assembler compile check), ccocc, ccbackoffice, ccsampledata",
+      "All ImpEx and SampleOrderLoader; Spartacus adapter/module; any browser rendering, axe, e2e, screenshots, keyboard walk-through"
+    ],
+    "spikes": "S1 streaming, S2 DataMapper, S3 real providers, S4 latency, S5 pack coexistence, S6 scale, S8 translation: NOT run. S7: engine-level passes; HTTP 403 and SAP DAO integration not run. See docs/spikes/S1..S8.md",
+    "unverified_from_memory": [
+      "All SAP imports in controllers/DAOs/gateways: BaseController, ApiVersion, SecuredAccessConstants, ApiFieldsParam, ApiBaseSiteIdAndUserIdParam, PagedFlexibleSearchService, SortQueryData, CommercePriceService, ClassificationService/Feature, ProductReferenceTypeEnum.FOLLOWUP, ArticleApprovalStatus, ConsignmentModel.getTrackingID, OrderStatus values",
+      "Generated model/enum names from items.xml (CCConfigEntryModel.PACKCODE etc. constants) and CCConfigEntryModel.getValue(Locale)",
+      "Registry/JaloSession calls in SessionPropagator; SseEmitter behaviour behind OCC filters and CCv2 ingress",
+      "OpenAI/Anthropic/Gemini request shapes and ALL model IDs",
+      "ImpEx syntax (catalog, classification, B2B, user rights, ServicelayerJob/CronJob/Trigger), @SystemSetup pattern",
+      "Spartacus AuthService/UserIdService/AuthGuard usage and lazy-feature wiring",
+      "Whether org.apache.commons.collections / lang3 are the correct commons packages on the owner's release"
+    ],
+    "known_functional_gaps": [
+      "Limit hit returns a notice, not partial blocks (AS-15)",
+      "Quick order uses grammar only, no model parse of residual lines (AS-16)",
+      "Welcome panel template text only; N3 not implemented",
+      "PlatformUsageCounterStore read-modify-write is not atomic across nodes",
+      "PD-05 compatibility has data but no dedicated logic; PD-03, PA-07, CI-02, KN-01, OM-03 lack scenario tests (docs/capability-status.md)",
+      "No Solr CandidateProvider (S6)",
+      "Intent SWITCH_PACK returns unsupported text; SC-10 is configuration only",
+      "DefaultChatFacade MAX_MESSAGE_LENGTH is a constant (1000) while public config reads cc.message.maxLength",
+      "No LICENSE file (owner decision)"
+    ]
+  },
+  "next_steps_on_sap_machine": [
+    {"n": 1, "do": "Clone the repo (or restore bundles). Create the five extensions in a SAP Commerce 2211 workspace: generate ccocc from the yocc template, then merge in this repo's ccocc sources and ccocc-beans.xml. Add extensions to localextensions.xml in dependency order cccore, ccfacades, ccocc, ccbackoffice, ccsampledata. Run ant clean all. Paste compile errors to Claude; fix imports against the REAL platform and the owner's real controller file."},
+    {"n": 2, "do": "Replace docs/examples transcriptions with the real files if available and compare: imports, bean XML, items.xml, DAO (buildFilterClause/createSortQuery/PagedFlexibleSearchService use), test samples. Then align code and update docs/assumptions.md. Ask the owner for the items in docs/examples/MISSING_EXAMPLES.md."},
+    {"n": 3, "do": "ant initialize; check items.xml deploys (typecodes 14100-14105 must not clash), generated model constants match the DAO code, Backoffice shows the types, ccbusinessmanagergroup restriction works."},
+    {"n": 4, "do": "Load essential data then packs through the ccsampledata.pack.<code> system-setup options on a site with cc.syntheticDataOnly=true. Fix ImpEx errors (S5). Check SC fixtures exist and the demo dealers can log in (passwords are NOT in ImpEx; set via local.properties-driven step you add)."},
+    {"n": 5, "do": "Run spike S1: POST /chat/stream locally and behind the real ingress; check the SseEmitter works through OCC filters, heartbeat, cancel, SessionPropagator (prices must be the customer's). Run S2: DataMapper with fields on chat DTOs/events."},
+    {"n": 6, "do": "HTTP tests with customer tokens: another userId -> 403; stream arrives incrementally; /chat returns the same blocks. Add integration tests as customer A vs B for every DAO (S7) following the owner's test sample."},
+    {"n": 7, "do": "S3: verify current provider docs and model IDs, set route.<task>.* in Backoffice, put keys under cc.provider.key.<alias> in local.properties only. Run 50 schema-constrained decisions per provider; fix adapter shapes; record in docs/verification-log.md and docs/spikes/S3.md. Then S4 on a paid tier, S8 translation."},
+    {"n": 8, "do": "Frontend: create or use the Spartacus storefront, register the lazy feature with AuthGuard, exclude the route from SSR, provide CC_AUTH and CC_CONFIG, verify logout clears sessionStorage. Add component tests, axe, e2e SC-01, keyboard walk-through, reduced-motion, screenshot baseline (not done)."},
+    {"n": 9, "do": "Close the gaps in known_functional_gaps; add scenario tests for PD-03, PA-07, CI-02, KN-01; implement partial blocks if the owner wants them."},
+    {"n": 10, "do": "Wire a CI job that builds the SAP modules (self-hosted runner or private artifact). Keep docs/owner-approvals.md current; never apply a pending approval."}
+  ],
+  "owner_needs": [
+    "SAP platform build environment (B1)",
+    "Examples in docs/examples/MISSING_EXAMPLES.md (full Chat facade/service, full DAO, truncated catch blocks, controller error handling, Spring XML, items.xml, Backoffice, populator, tests, Angular/Spartacus samples + lint rules, Javadoc style, versions, javax vs jakarta)",
+    "Confirm N1 names, N7 versions; decide N3, N4, N6 notice wording and legal review, N8 PwC hex values against the brand portal; licence choice (B2); A1 interpretation (AS-14)",
+    "Provider keys and permission to run S3/S4/S8; extra languages beyond Hindi (N5)"
+  ],
+  "commands": {
+    "engine_tests": "backend/cccore/tools-run.sh   (Java 21; downloads jars into backend/cccore/.local-libs; if Maven Central rate-limits, copy jars manually)",
+    "packgen": "python3 -I tools/packgen/generate.py && python3 -I tools/packgen/test_generate.py",
+    "beans": "python3 tools/beangen/generate.py [--check]",
+    "contrast_and_tokens": "python3 -I tools/ci/contrast.py ; python3 tools/ci/tokens.py [--check]",
+    "secret_scan": "tools/ci/selftest.sh",
+    "storefront": "cd storefront/chat-feature && npm ci && npm test && npx tsc --noEmit -p tsconfig.core.json && npx ngc -p tsconfig.lib.json",
+    "rebuild_handoff": "python3 tools/handoff/build.py"
+  },
+  "pitfalls": [
+    "Do not trust any SAP import in this code until it compiles on the real platform.",
+    "Setters on engine classes exist only so tests can wire them; keep @Resource(name=...) fields as the production injection (owner convention).",
+    "Engine tests use teststubs/ (fake SystemException, ServicesUtil). Never ship teststubs.",
+    "Anthropic Fable/Mythos models are excluded from ZDR: never route ZDR clients to them; model IDs are configuration, not code.",
+    "Free-tier Gemini is for synthetic data only (A2 guard in DefaultModelRouter).",
+    "Config entries pack.<p>.* are read for the ACTIVE pack only; changing activePack takes effect after cache TTL plus page reload.",
+    "Hex colours are not confirmed PwC values; no PwC logo/font is bundled.",
+    "In this environment the git remote main is the only branch; the session instruction said to develop on a ccr- branch but the user explicitly asked for main."
+  ],
+  "read_first_in_repo": ["README.md", "docs/capability-status.md", "docs/assumptions.md", "docs/owner-approvals.md", "docs/verification-log.md", "docs/architecture.md", "docs/extension-guide.md", "docs/convention-digest.md", "docs/design/UC1_Stage3_Handoff.json"]
+}
