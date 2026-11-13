@@ -1,0 +1,1 @@
+{"id":"synthetic","content":[{"type":"tool_use","name":"compose_v1","input":{"text":"hello"}}],"usage":{"input_tokens":12,"output_tokens":4}}

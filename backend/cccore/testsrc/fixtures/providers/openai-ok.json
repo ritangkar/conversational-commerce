@@ -1,0 +1,1 @@
+{"id":"synthetic","choices":[{"message":{"role":"assistant","content":"{\"text\":\"hello\"}"}}],"usage":{"prompt_tokens":11,"completion_tokens":3}}
