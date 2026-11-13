@@ -1,0 +1,2879 @@
+{
+  "document": "UC1 Stage 3 Handoff: Architecture and Design (from Technical Research, self-contained)",
+  "how_to_use": "Paste this JSON into a new independent Claude conversation together with the text of stage_3_master_prompt (also supplied inside this file). No other attachment is needed.",
+  "generated_on": "2026-11-13",
+  "researcher_limits": "Research done in one session using web search; SAP Help Portal pages were mostly reachable only via search snippets, SAP KBA previews, SAP Learning and community mirrors, so SAP-specific design claims are labelled accordingly. No prototype or benchmark was run.",
+  "stage": "Stage 2 (technical research) complete. Next: Stage 3 architecture, technical design and Claude Code implementation prompt.",
+  "stage_3_master_prompt": "# MASTER PROMPT - UC1 Architecture and Design Stage (conversation 3 of 3)\n\n(Paste this prompt first, then paste the full contents of UC1_Stage3_Handoff.json in the same message or immediately after. No other attachment is needed.)\n\n## 1. Your role\nAct as SAP Commerce solution architect, Spartacus/Angular architect, AI orchestration architect, security/privacy reviewer and technical writer. Stages 1 (product discovery) and 2 (technical research) are complete and captured in the JSON. You produce the detailed architecture, technical design and the Claude Code implementation prompt. You do not write production code.\n\n## 2. Inputs and rules\n- The JSON is authoritative. product_definition carries the approved scope, 43-capability catalogue, scenarios, principles, decisions D01-D37 and open questions. coding_convention_reference, protected_decisions, research findings, feasibility, answers, spikes, risks and decisions_needing_owner_approval are included.\n- Protected decisions must not change without product-owner approval. Where your design needs to touch one, list it under owner approvals with evidence and options; never change it silently.\n- The Coding Convention Reference is mandatory. Preserve it and carry it, complete, into your output. The implementation prompt must instruct Claude Code to inspect the owner's supplied examples and follow them. Request clearer examples for anything marked unknown (examples_needed_from_owner).\n- Keep verified facts, assumptions and recommendations visibly separate. Re-verify any evidence marked 'Secondary source only' or 'Not verified' before depending on it. Provider terms and platform versions may have changed since 2026-11-13.\n- Research recommendations are proposals until the owner confirms them. Start with decisions_needing_owner_approval (A1-A14): confirm defaults in one brief round, then proceed.\n\n## 3. Mission and required outputs\n1. Architecture overview (extensions, layers, SPIs/gateways, runtime flow for streaming, orchestration, sanitisation, audit, configuration, pack switching) with diagrams.\n2. Technical design: item types and Backoffice configuration, DTO beans, conceptual-to-concrete OCC contracts (including streaming events and non-streaming fallback), tool catalogue contracts, workflow templates per intent and scenario, DAO/FlexibleSearch design following the supplied conventions, provider adapter design, sanitisation design, prompt and schema design, response contract, frontend component and state design, theming, accessibility, ImpEx/pack generator design, test strategy, deployment and configuration.\n3. Capability-to-design traceability for all 43 IDs and ten scenarios SC-01..SC-10.\n4. Spike plan (S1-S8) with pass/fail criteria and the design branches each outcome triggers.\n5. The Claude Code implementation prompt: staged build plan, repository layout, step-by-step prompts, acceptance checks, and the explicit instruction to inspect the supplied examples and follow the conventions.\n6. Open items and owner approvals still outstanding.\n\n## 4. Method\nWork section by section; ask the product owner one focused question at a time only when a decision is genuinely theirs; otherwise recommend a default and continue. Search current documentation for any API, version or provider term you rely on and label it Verified, Assumption or Recommendation with source and date.\n\n## 5. Final instruction\nBe rigorous and honest, keep enterprise execution secure and controlled, and keep AI as interpreter and communicator with SAP Commerce Java as the executor of record.\n",
+  "claude_code_instruction": "Claude Code MUST inspect the owner-supplied example code and follow the Coding Convention Reference below before writing any code. Patterns are binding; class names and the fpp/Cpp prefixes are placeholders. Where a convention is marked 'Not visible / unknown', stop and request the example (list in examples_needed_from_owner) rather than inventing a style. Mark future-scope extension points with comments (unit-level access, live stock, real cart, carrier tracking).",
+  "coding_convention_reference": {
+    "provenance_note": "Source: owner-supplied screenshots of sample code (a chat/controller/facade/service example plus a DAO example). The owner has stated they are sample code but correct. Patterns are binding; specific class names and the fpp/Cpp prefixes are placeholders and must not be assumed for the accelerator. Several lines are truncated in the screenshots; request a clearer example before relying on those details.",
+    "mandatory_instruction": "Every later stage must follow these conventions. The final implementation prompt must instruct Claude Code to inspect the supplied examples and follow them. Request clearer examples for anything marked unknown.",
+    "classification_legend": {
+      "Confirmed from screenshots": "directly visible",
+      "Likely convention requiring validation": "inferred",
+      "Not visible / unknown": "not seen"
+    },
+    "conventions": [
+      {
+        "area": "Package naming",
+        "observation": "Base prefix com.fpp. DTO beans: com.fpp.facades.data.chat.* (facade DTOs) and com.fpp.occ.chat.* (OCC ws DTOs).",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Class naming",
+        "observation": "Interface + Default implementation: ChatFacade/DefaultChatFacade, ChatService/DefaultChatService; DAO interface + DaoImpl (CppDeliveryIssueDao/CppDeliveryIssueDaoImpl). Facade DTOs end in Data; OCC DTOs end in WsDTO.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Prefix usage",
+        "observation": "'fpp' appears on packages and Spring bean names; 'Cpp' appears on a DAO/model example. Whether these are two intentional prefixes is not known.",
+        "status": "Likely convention requiring validation"
+      },
+      {
+        "area": "DTO definition",
+        "observation": "DTOs declared in XML beans files: facade-beans.xml for *Data and occ-beans.xml for *WsDTO, with property name and type (e.g. java.lang.String).",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Controller structure",
+        "observation": "@Controller, @RequestMapping(\"/{baseSiteId}/users/{userId}\"), @ApiVersion(\"v2\"), class extends BaseController.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Endpoint annotations",
+        "observation": "@Secured({ROLE_CUSTOMERGROUP, ROLE_CUSTOMERMANAGERGROUP, ROLE_TRUSTED_CLIENT}), @PostMapping(value, consumes = APPLICATION_JSON_VALUE), @ResponseBody, @ResponseStatus(HttpStatus.OK), @Operation(operationId, summary, description), @ApiBaseSiteIdAndUserIdParam.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Endpoint parameters",
+        "observation": "@Parameter(description, required) @RequestBody final XxxWsDTO request; @ApiFieldsParam @RequestParam(defaultValue = DEFAULT_FIELD_SET) final String fields.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Controller mapping",
+        "observation": "getDataMapper().map(source, Target.class[, fields]) to convert WsDTO <-> Data; controller calls the facade only.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Controller exception handling",
+        "observation": "No controller-level exception handling visible.",
+        "status": "Not visible / unknown"
+      },
+      {
+        "area": "Dependency injection",
+        "observation": "@Resource(name = \"beanName\") on private fields for facade/service in controller/facade; plain @Resource for services in service/DAO. Constructor injection not seen.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Facade design",
+        "observation": "Interface method takes/returns *Data; implementation validates input (null/blank via StringUtils.isBlank, max length constant) and delegates to a service. Facade throws IllegalArgumentException for invalid input.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Service design",
+        "observation": "Interface with simple method contracts; Default implementation uses constants for config keys, validateParameterNotNull(...) for arguments, ConfigurationService for properties.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Configuration",
+        "observation": "Property keys as private static final String constants read via ConfigurationService.getConfiguration() with defaults (getString/getInt). Safe defaults in project.properties; secrets only in local.properties (gitignored), Cloud Portal secret property, or environment variable.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "External HTTP calls",
+        "observation": "java.net.http.HttpClient (shared, with connect timeout), per-request timeout from config, Jackson ObjectMapper for building/reading JSON (never string concatenation).",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Error handling (service)",
+        "observation": "Non-200 -> LOG.warn with status only (body may echo user content) then throw SystemException; missing/null response content -> SystemException; InterruptedException -> restore interrupt flag. Remaining catch blocks truncated.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Logging",
+        "observation": "Logger LOG = LogManager.getLogger(Class.class); log status/metadata only, not sensitive bodies.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Validation patterns",
+        "observation": "Facade-level input validation with IllegalArgumentException; service/DAO-level validateParameterNotNull with messages like 'X must not be null'.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "DAO design",
+        "observation": "Interface returns models or SearchPageData<Model>; Impl uses FlexibleSearchService for single lookups and PagedFlexibleSearchService with SortQueryData for paged queries; customer passed to the DAO and filtered in the query.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "FlexibleSearch conventions",
+        "observation": "Queries as private static final String constants built from model constants (Model._TYPECODE, Model.FIELD, ItemModel.PK) with {r:...} alias syntax; all values as named parameters (?param) via Map or FlexibleSearchQuery.addQueryParameter; nothing from the request concatenated into query text.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Dynamic filters",
+        "observation": "buildFilterClause(params, filters, ...) appends AND clauses with a StringBuilder and populates the params map; null/blank checks; default 'active only'; dates truncated, toDate handled as exclusive next day.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Sorting",
+        "observation": "createSortQuery(sortCode, query) helper builds SortQueryData; list of sort options; unknown sort code falls back to DEFAULT_SORT.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Result handling",
+        "observation": "CollectionUtils.isNotEmpty(result.getResult()) ? result.getResult().get(0) : null for single lookups; blank input returns null.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Existing model reuse",
+        "observation": "Examples reference OOTB ItemModel, OrderModel, ProductModel, CustomerModel, EnumerationValueModel, plus custom Cpp* models. Reuse of OOTB models for orders/products/customers is visible.",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Future-scope comments",
+        "observation": "Owner convention: add comments where future scope exists (e.g. unit-level access, unit-level replenishment, live stock, real cart).",
+        "status": "Confirmed from screenshots"
+      },
+      {
+        "area": "Formatting",
+        "observation": "Allman braces on new lines for blocks; 'final' on parameters/locals; Javadoc/comment style not visible. Some single-line if with braces on same line appears in findByReportNumber.",
+        "status": "Likely convention requiring validation"
+      },
+      {
+        "area": "Spring bean XML",
+        "observation": "Service/DAO/facade bean definitions (xxx-spring.xml) and OCC web spring config not visible.",
+        "status": "Not visible / unknown"
+      },
+      {
+        "area": "items.xml",
+        "observation": "No items.xml example visible.",
+        "status": "Not visible / unknown"
+      },
+      {
+        "area": "Populators/converters",
+        "observation": "No populator or converter examples visible; mapping shown only via getDataMapper() and manual Data construction.",
+        "status": "Not visible / unknown"
+      },
+      {
+        "area": "Unit/integration tests",
+        "observation": "No tests visible.",
+        "status": "Not visible / unknown"
+      },
+      {
+        "area": "Frontend",
+        "observation": "No Angular/Spartacus examples supplied yet. Ask the owner for examples if frontend conventions must be preserved.",
+        "status": "Not visible / unknown"
+      }
+    ],
+    "code_excerpts_transcribed": {
+      "DTO beans (facade-beans.xml / occ-beans.xml)": "<bean class=\"com.fpp.facades.data.chat.ChatRequestData\">\n    <property name=\"message\" type=\"java.lang.String\"/>\n</bean>\n<bean class=\"com.fpp.occ.chat.ChatResponseWsDTO\">\n    <property name=\"reply\" type=\"java.lang.String\"/>\n</bean>",
+      "Controller (excerpt; some lines truncated in screenshot)": "@Controller\n@RequestMapping(value = \"/{baseSiteId}/users/{userId}\")\n@ApiVersion(\"v2\")\npublic class ChatController extends BaseController\n{\n    @Resource(name = \"fppChatFacade\")\n    private ChatFacade chatFacade;\n\n    @Secured({ SecuredAccessConstants.ROLE_CUSTOMERGROUP, SecuredAccessConstants.ROLE_CUSTOMERMANAGERGROUP, SecuredAccessConstants.ROLE_TRUSTED_CLIENT })\n    @PostMapping(value = \"/chat\", consumes = MediaType.APPLICATION_JSON_VALUE)\n    @ResponseBody\n    @ResponseStatus(HttpStatus.OK)\n    @Operation(operationId = \"chat\", summary = \"...\", description = \"...\")\n    @ApiBaseSiteIdAndUserIdParam\n    public ChatResponseWsDTO chat(\n            @Parameter(description = \"Chat request\", required = true) @RequestBody final ChatRequestWsDTO request,\n            @ApiFieldsParam @RequestParam(defaultValue = DEFAULT_FIELD_SET) final String fields)\n    {\n        final ChatRequestData requestData = getDataMapper().map(request, ChatRequestData.class);\n        final ChatResponseData responseData = chatFacade.chat(requestData);\n        return getDataMapper().map(responseData, ChatResponseWsDTO.class, fields);\n    }\n}",
+      "Facade validation": "if (request == null || StringUtils.isBlank(request.getMessage()))\n{\n    throw new IllegalArgumentException(\"message must not be empty\");\n}\nfinal String message = request.getMessage().trim();\nif (message.length() > MAX_MESSAGE_LENGTH)\n{\n    throw new IllegalArgumentException(\"message must not exceed \" + MAX_MESSAGE_LENGTH ...);\n}",
+      "DAO query constant and named parameters": "private static final String FIND_REPORT_BY_NUMBER =\n    \"SELECT {r:\" + ItemModel.PK + \"} FROM {\" + CppDeliveryIssueReportModel._TYPECODE + \" AS r}\"\n    + \" WHERE {r:\" + CppDeliveryIssueReportModel.REPORTNUMBER + \"}=?reportNumber\"\n    + \" AND {r:\" + CppDeliveryIssueReportModel.CUSTOMER + \"}=?customer\";\n\nfinal FlexibleSearchQuery query = new FlexibleSearchQuery(FIND_REPORT_BY_NUMBER);\nquery.addQueryParameter(\"reportNumber\", reportNumber);\nquery.addQueryParameter(\"customer\", customer);   // transcribed approximately; first query line partly truncated in screenshot"
+    }
+  },
+  "protected_decisions": {
+    "rule": "Must not change without product-owner approval",
+    "items": [
+      {
+        "id": "D01",
+        "status": "Confirmed",
+        "decision": "Delivery: public GitHub repo, drop-in module for client OCC/facade/core layers; no secrets/real data/client-specific models."
+      },
+      {
+        "id": "D02",
+        "status": "Confirmed",
+        "decision": "Demo runs on owner's local SAP Commerce with seeded dummy products, orders and carts."
+      },
+      {
+        "id": "D03",
+        "status": "Confirmed",
+        "decision": "Add to Cart targets a clearly labelled placeholder purchase list; real cart integration deferred; checkout in storefront; AI never places orders."
+      },
+      {
+        "id": "D04",
+        "status": "Confirmed",
+        "decision": "Baseline persona: dealer / B2B customer buyer only. Approvers, admins, sales reps are roadmap."
+      },
+      {
+        "id": "D05",
+        "status": "Confirmed",
+        "decision": "Search supports four request styles: by code, description/keywords, use case, constraints."
+      },
+      {
+        "id": "D06",
+        "status": "Confirmed",
+        "decision": "Search is deterministic and backend-controlled; AI extracts parameters and judges relevance; price/stock constraints evaluated in backend."
+      },
+      {
+        "id": "D07",
+        "status": "Confirmed",
+        "decision": "Conversation memory is session-only, tied to the browser tab; no persisted chat history."
+      },
+      {
+        "id": "D08",
+        "status": "Confirmed",
+        "decision": "Customer-linked interest events stored in a dedicated custom table; enabled by default with a visible notice; per-client toggle; default retention 90 days (configurable)."
+      },
+      {
+        "id": "D09",
+        "status": "Confirmed",
+        "decision": "Experience is a full-page ChatGPT/Claude-style interface inside the storefront (not a pop-up), with a welcome panel of proactive suggestions."
+      },
+      {
+        "id": "D10",
+        "status": "Confirmed",
+        "decision": "Order tracking uses Commerce-held data only; carrier lookups deferred."
+      },
+      {
+        "id": "D11",
+        "status": "Confirmed",
+        "decision": "Replenishment is simple rule-based in baseline; enhancement later."
+      },
+      {
+        "id": "D12",
+        "status": "Confirmed",
+        "decision": "Purchase-pattern change detection is in the baseline; shown as labelled observations with numbers."
+      },
+      {
+        "id": "D13",
+        "status": "Confirmed",
+        "decision": "Every capability is individually enable/disable and configurable via Backoffice runtime configuration (config item types)."
+      },
+      {
+        "id": "D15",
+        "status": "Confirmed",
+        "decision": "Cross-sell and bundles use deterministic logic; AI explains."
+      },
+      {
+        "id": "D16",
+        "status": "Confirmed",
+        "decision": "Knowledge/FAQ answers come only from admin-configured approved content."
+      },
+      {
+        "id": "D17",
+        "status": "Confirmed",
+        "decision": "Multilingual is toggleable: translate input to English, process, translate output back. Identifiers never translated."
+      },
+      {
+        "id": "D18",
+        "status": "Confirmed",
+        "decision": "Model provider and model are configurable per task across Gemini, Anthropic and OpenAI; providers can be switched on/off. Demo uses free Gemini plus OpenAI."
+      },
+      {
+        "id": "D19",
+        "status": "Confirmed",
+        "decision": "API keys live in secure properties (local.properties gitignored / environment / Cloud secret); project.properties holds safe defaults only; Backoffice holds references, toggles and routing."
+      },
+      {
+        "id": "D20",
+        "status": "Confirmed",
+        "decision": "Proactive welcome panel is in the baseline."
+      },
+      {
+        "id": "D21",
+        "status": "Confirmed",
+        "decision": "Attribute-based comparison and compatibility via a configurable attribute are in the baseline."
+      },
+      {
+        "id": "D22",
+        "status": "Confirmed",
+        "decision": "Reorder from a previous order is in the baseline."
+      },
+      {
+        "id": "D23",
+        "status": "Confirmed",
+        "decision": "Ten signature demonstration scenarios."
+      },
+      {
+        "id": "D24",
+        "status": "Confirmed",
+        "decision": "Business recommendation controls: toggles/weights per recommendation type plus an admin-set priority/margin attribute; margin never sent to LLM or customers."
+      },
+      {
+        "id": "D25",
+        "status": "Confirmed",
+        "decision": "Quantity recommendations (history-based) and basket optimisation are in the baseline."
+      },
+      {
+        "id": "D26",
+        "status": "Confirmed",
+        "decision": "Product cards: AI returns product IDs only; backend hydrates price/images; modern polished UI; customer-specific prices shown, never passed to the LLM."
+      },
+      {
+        "id": "D27",
+        "status": "Confirmed",
+        "decision": "Stock is hardcoded demo data (labelled) with a placeholder hook for live stock."
+      },
+      {
+        "id": "D28",
+        "status": "Confirmed",
+        "decision": "Off-topic questions are redirected; unsupported requests are declined transparently."
+      },
+      {
+        "id": "D29",
+        "status": "Confirmed",
+        "decision": "Live step indicators plus streamed, animated final answer."
+      },
+      {
+        "id": "D30",
+        "status": "Confirmed",
+        "decision": "Thumbs up/down feedback in baseline, stored as metadata only."
+      },
+      {
+        "id": "D31",
+        "status": "Confirmed",
+        "decision": "Baseline suggests contacting the account manager (configurable text) when unresolved; full human handoff workflow is roadmap."
+      },
+      {
+        "id": "D32",
+        "status": "Confirmed",
+        "decision": "Industry packs (tyres/auto parts, paints/coatings, cement/building materials, plywood/wood panels, electrical) with seed-data generators in the repo, live switching via configuration with data coexisting, theme and terminology changes."
+      },
+      {
+        "id": "D33",
+        "status": "Confirmed",
+        "decision": "Orders visible: logged-in user's own orders only; unit-level access is roadmap with 'future scope' code comments."
+      },
+      {
+        "id": "D34",
+        "status": "Confirmed",
+        "decision": "Replenishment uses the individual user's history only; unit-level is roadmap with 'future scope' comments."
+      },
+      {
+        "id": "D35",
+        "status": "Confirmed",
+        "decision": "Quick Order, budget planner, substitution, natural-language order search, 'Why this?' panel, editable purchase list are baseline; photo search and voice are roadmap."
+      },
+      {
+        "id": "D36",
+        "status": "Confirmed",
+        "decision": "Full-response target <=10 seconds with progress shown; per-customer usage caps in baseline (configurable)."
+      },
+      {
+        "id": "D37",
+        "status": "Confirmed",
+        "decision": "Coding conventions come from owner-validated sample code (patterns binding; sample names are placeholders). Mark future-scope extension points with comments."
+      }
+    ],
+    "not_protected_but_noted": [
+      "D14 (Rejected: promotions out of scope)",
+      "D08a (Proposed)",
+      "D17a (Assumed)",
+      "D24a (Proposed)"
+    ]
+  },
+  "product_definition": {
+    "project_identity": {
+      "name": "UC1 - SAP Commerce AI-First Conversational B2B Commerce Accelerator",
+      "stage": "Stage 1 complete: product capability discovery and requirements (approved by product owner). Next: independent technical research.",
+      "delivery_model": "Public GitHub repository. A client pulls it and plugs it into their own OCC, facade and core layers. No secrets, real data or client-specific models in the repo.",
+      "vision": "A reusable, industry-agnostic AI conversational commerce layer on SAP Commerce Cloud B2B storefronts: a full-page, ChatGPT-style purchasing assistant for authenticated dealers that understands intent, discovers and compares products, prepares repeat purchases, explains orders and surfaces purchasing opportunities. AI interprets and communicates; SAP Commerce backend executes and supplies authoritative data.",
+      "positioning": "More than a chatbot or product search: coordinated, controlled, privacy-first and grounded in real enterprise data; configurable via Backoffice and extensible by clients."
+    },
+    "approved_scope": {
+      "baseline_capability_ids": [
+        "CF-01",
+        "CF-02",
+        "CF-03",
+        "CF-04",
+        "CF-05",
+        "CF-06",
+        "CF-07",
+        "CF-08",
+        "PD-01",
+        "PD-02",
+        "PD-03",
+        "PD-04",
+        "PD-05",
+        "PD-06",
+        "PD-07",
+        "PA-01",
+        "PA-02",
+        "PA-03",
+        "PA-04",
+        "PA-05",
+        "PA-06",
+        "PA-07",
+        "OM-01",
+        "OM-02",
+        "OM-03",
+        "RI-01",
+        "RI-02",
+        "RI-03",
+        "RI-04",
+        "RI-05",
+        "CI-01",
+        "CI-02",
+        "CI-03",
+        "CI-04",
+        "KN-01",
+        "PL-01",
+        "PL-02",
+        "PL-03",
+        "PL-04",
+        "PL-05",
+        "PL-06",
+        "PL-07",
+        "PL-08"
+      ],
+      "roadmap_deferred": [
+        "Unit-level (B2B unit) order visibility and replenishment",
+        "Live stock and availability integration (placeholder hook exists)",
+        "Carrier/logistics live tracking",
+        "Real Add to Cart integration (placeholder in baseline)",
+        "Human handoff workflow (baseline has contact suggestion only)",
+        "Promotions and scheme eligibility (out of scope for now)",
+        "Photo-based product identification",
+        "Voice input/output",
+        "Resumable conversation history",
+        "Saved customer preferences",
+        "Approver, account admin and sales-rep personas",
+        "Document ingestion retrieval for knowledge",
+        "Advanced forecasting and seasonality for replenishment"
+      ],
+      "explicitly_excluded": [
+        "Promotions and offers (out of scope for now)",
+        "AI-generated SQL/FlexibleSearch execution, unrestricted LLM database access",
+        "AI-placed orders",
+        "Separate authentication mechanism",
+        "Persisted chat history in the baseline"
+      ],
+      "baseline_persona": "Dealer / B2B customer buyer (logged-in user only)",
+      "industry_packs": [
+        "Tyres and auto parts",
+        "Paints and coatings",
+        "Cement and building materials",
+        "Plywood and wood panels",
+        "Electrical"
+      ]
+    },
+    "functional_capability_catalogue": [
+      {
+        "id": "CF-01",
+        "name": "Full-page conversational experience",
+        "category": "Generic core capability",
+        "description": "A dedicated full-page storefront route (ChatGPT/Claude-style) with the whole thread visible, animated streamed answers, live step indicators (e.g. 'Checking your order history...'), responsive layout, modern polished look.",
+        "customer_value": "Natural, uncluttered way to do purchasing work in one place.",
+        "business_value": "Primary differentiating front door to the accelerator; strong first impression in demos.",
+        "required_information": "Authenticated storefront session; industry-pack theme.",
+        "ai_responsibilities": "Phrases the final answer; backend emits progress events per step.",
+        "backend_responsibilities": "Chat endpoint; progress/step event emission; streamed delivery of final text; message validation (blank, max length).",
+        "dependencies": "Spartacus storefront route; streaming/progress transport through OCC (research item).",
+        "customisation": "Core UI; theme and welcome content driven by active industry pack.",
+        "feasibility": "Medium. Streaming through OCC and Spartacus needs technical research.",
+        "demonstration_value": "Very high.",
+        "risks": "Perceived latency; accessibility; mobile layout; streaming proxies/buffering.",
+        "acceptance_criteria": [
+          "Authenticated dealer can open the chat page from the storefront.",
+          "Final answer appears progressively.",
+          "Each backend step is shown as a live indicator.",
+          "Page is responsive and keyboard accessible.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "Customer value H, business value H, complexity M, demo impact VH, reusability H: every other capability is delivered through this surface.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-02",
+        "name": "Intent understanding and clarification",
+        "category": "Generic core capability",
+        "description": "Identifies what the dealer wants, extracts structured parameters, and asks a focused clarifying question when information is insufficient or ambiguous.",
+        "customer_value": "Fewer dead ends; assistant guides when the request is vague.",
+        "business_value": "Higher task completion and conversion.",
+        "required_information": "Message text; session context; active capabilities list.",
+        "ai_responsibilities": "Intent classification with confidence; parameter extraction; clarification question generation; proposes next permitted tool.",
+        "backend_responsibilities": "Validates proposed intent/tool against the catalogue and enabled capabilities; enforces clarification limits.",
+        "dependencies": "Tool catalogue (PL-04); model routing (PL-02).",
+        "customisation": "Prompts, intents and thresholds configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Misclassification; excessive clarification loops.",
+        "acceptance_criteria": [
+          "Vague request triggers at most the configured number of clarifying questions.",
+          "Proposed tools not in the catalogue or disabled are rejected.",
+          "Intent and confidence are audit-logged.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-03",
+        "name": "Rich response components",
+        "category": "Generic core capability",
+        "description": "Structured response types rendered by the front end: product cards (image, backend-fetched price, demo stock), comparison table, order summary, suggested purchase list, recommendation list, notices.",
+        "customer_value": "Scannable, visual answers instead of walls of text.",
+        "business_value": "Makes the AI output actionable and demo-worthy.",
+        "required_information": "Product IDs/order references returned by the AI; backend-hydrated data.",
+        "ai_responsibilities": "Chooses which component type to present and returns product/order references only (never prices).",
+        "backend_responsibilities": "Hydrates references from trusted data; validates every referenced ID against the customer's permitted data; returns structured response contract.",
+        "dependencies": "Structured response schema (research); Angular components.",
+        "customisation": "Component set extensible; styling per industry pack.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "Very high.",
+        "risks": "AI referencing IDs that do not exist or are not permitted.",
+        "acceptance_criteria": [
+          "AI output contains IDs only for products/orders; backend hydrates them.",
+          "Invalid or unauthorised IDs are dropped and logged.",
+          "Cards show images and customer-specific price from Commerce.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-04",
+        "name": "Session-only conversation context",
+        "category": "Generic core capability",
+        "description": "Conversation context lives only for the browser tab session (survives in-storefront navigation and refresh; ends on tab close or logout). No chat history is persisted.",
+        "customer_value": "Continuity inside a session without storing conversations.",
+        "business_value": "Strong privacy posture; no conversation storage burden for clients.",
+        "required_information": "Current thread, shortlisted products, current purchase list.",
+        "ai_responsibilities": "Uses context to resolve references ('the second one', 'same as before').",
+        "backend_responsibilities": "Context trimming before each model call; sanitisation; clearing on logout/tab close.",
+        "dependencies": "Where session context is held (browser vs server-temporary) is a research item.",
+        "customisation": "Context window size/trim policy configurable.",
+        "feasibility": "Medium.",
+        "demonstration_value": "Medium.",
+        "risks": "Context growth and cost; leakage of stale context.",
+        "acceptance_criteria": [
+          "Refresh keeps the thread within the tab session.",
+          "Closing the tab or logging out discards it.",
+          "No transcript is stored server-side.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV M, complexity M, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-05",
+        "name": "Multilingual conversation",
+        "category": "Configurable capability",
+        "description": "Dealer writes in their own language; backend translates to English, processes in English, translates the reply back. Product codes, SKUs, brand names and order numbers are never translated. Toggleable.",
+        "customer_value": "Use the assistant in their own language.",
+        "business_value": "Opens international markets; strong global demo.",
+        "required_information": "Detected language; protected-token list (codes, order numbers).",
+        "ai_responsibilities": "Translation in and out via a configured translation model (default free Gemini API).",
+        "backend_responsibilities": "Orchestrates translation as a backend-controlled step; applies sanitisation to translation calls; protects identifiers; audit-logs language and model.",
+        "dependencies": "Translation provider configuration; PL-03 sanitisation.",
+        "customisation": "Provider/model per task configurable; language list configurable.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "Very high.",
+        "risks": "Two extra model calls (latency, cost); nuance loss; free-tier data-use terms must be verified; identifiers corrupted by translation.",
+        "acceptance_criteria": [
+          "Feature can be toggled off with no effect on English flow.",
+          "Identifiers pass through translation unchanged.",
+          "Reply language matches the dealer's language.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-06",
+        "name": "Off-topic redirect, honest limits, contact fallback",
+        "category": "Generic core capability",
+        "description": "Redirects off-topic questions to commerce topics; states plainly when it cannot do something or lacks information; when unresolved, suggests contacting the account manager using configurable contact text.",
+        "customer_value": "Honest, never a confident wrong answer.",
+        "business_value": "Trust and safe fallback; encourages human follow-up where valuable.",
+        "required_information": "Configured contact message; capability list.",
+        "ai_responsibilities": "Detects off-topic/unsupported requests; phrases the explanation.",
+        "backend_responsibilities": "Guardrails; unsupported-intent routing; fallback message injection.",
+        "dependencies": "None beyond platform.",
+        "customisation": "Contact text and redirect behaviour configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Over-refusal.",
+        "acceptance_criteria": [
+          "Off-topic request is redirected.",
+          "Unsupported request is declined transparently.",
+          "Contact suggestion appears when configured and the request is unresolved.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity L, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-07",
+        "name": "Thumbs up/down feedback",
+        "category": "Generic core capability",
+        "description": "Dealer can rate any answer. Stored as metadata only (no conversation text).",
+        "customer_value": "Lets customers shape quality.",
+        "business_value": "Quality signal for tuning prompts and tools.",
+        "required_information": "Rating, response id, intent, tools used, timestamp.",
+        "ai_responsibilities": "None.",
+        "backend_responsibilities": "Records feedback metadata; links to audit reference.",
+        "dependencies": "Custom storage (may share item type with CI-04; design item).",
+        "customisation": "Toggleable.",
+        "feasibility": "High.",
+        "demonstration_value": "Medium.",
+        "risks": "Feedback must not capture personal content.",
+        "acceptance_criteria": [
+          "Rating recorded without conversation text.",
+          "Can be disabled.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV M, complexity L, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CF-08",
+        "name": "'Why this?' transparency panel",
+        "category": "Generic core capability",
+        "description": "Expandable panel showing which data and steps produced an answer or suggestion (e.g. order history window, rule thresholds, tools used), without raw prompts.",
+        "customer_value": "Trust: understand why something is suggested.",
+        "business_value": "Differentiator; supports explainability and governance.",
+        "required_information": "Tool execution trace (sanitised), rule parameters.",
+        "ai_responsibilities": "Writes a plain-language explanation from the trace.",
+        "backend_responsibilities": "Provides sanitised trace; ensures no confidential data (margin, other customers) is exposed.",
+        "dependencies": "Audit/trace model (PL-05).",
+        "customisation": "Detail level configurable.",
+        "feasibility": "Medium.",
+        "demonstration_value": "Very high.",
+        "risks": "Accidental disclosure of internal business logic or margin data.",
+        "acceptance_criteria": [
+          "Panel lists data sources and steps for the answer.",
+          "Never reveals margin/priority data, raw prompts or other customers' data.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-01",
+        "name": "Natural-language product search",
+        "category": "Generic core capability",
+        "description": "Supports search by code, description/keywords, use case and constraints. AI extracts keywords and structured parameters; a predefined backend search returns approved product references; AI judges relevance against the original need.",
+        "customer_value": "Find the right product however they describe it.",
+        "business_value": "Faster discovery and higher conversion.",
+        "required_information": "Catalogue product data (description first; configurable searchable attributes).",
+        "ai_responsibilities": "Keyword/parameter extraction; relevance evaluation of returned candidates.",
+        "backend_responsibilities": "Deterministic, parameterised search over approved attributes; permission/catalogue/visibility rules; price/stock constraints evaluated in backend; returns IDs.",
+        "dependencies": "Product data richness; configurable search fields.",
+        "customisation": "Search fields and attribute mappings per industry pack.",
+        "feasibility": "High for code/keyword; Medium for use-case and constraints.",
+        "demonstration_value": "Very high.",
+        "risks": "Thin product data; AI inventing attributes; large catalogue performance.",
+        "acceptance_criteria": [
+          "Code, description, use-case and constraint queries each return grounded results.",
+          "No AI-generated query is ever executed.",
+          "When data is too thin, assistant says so and asks a clarifying question.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV VH, complexity M-H, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-02",
+        "name": "Guided discovery, categories and filters",
+        "category": "Generic core capability",
+        "description": "Conversational narrowing through categories and attribute filters with suggested refinements.",
+        "customer_value": "Helps when they do not know exactly what they need.",
+        "business_value": "Reduces abandonment.",
+        "required_information": "Category tree; filterable attributes.",
+        "ai_responsibilities": "Suggests next refinement question.",
+        "backend_responsibilities": "Category/facet retrieval; filter execution.",
+        "dependencies": "Product attributes.",
+        "customisation": "Facets per industry pack.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Sparse attributes.",
+        "acceptance_criteria": [
+          "Assistant can browse a category and apply filters via conversation.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-03",
+        "name": "Product Q&A from catalogue data",
+        "category": "Generic core capability",
+        "description": "Answers product questions using actual catalogue data only; says so when data is missing.",
+        "customer_value": "Quick answers without opening pages.",
+        "business_value": "Fewer support queries.",
+        "required_information": "Product attributes and descriptions.",
+        "ai_responsibilities": "Answers strictly from retrieved fields.",
+        "backend_responsibilities": "getProductDetails with approved fields.",
+        "dependencies": "Catalogue completeness.",
+        "customisation": "Approved field list configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Hallucinated specs.",
+        "acceptance_criteria": [
+          "Every stated attribute is traceable to retrieved data.",
+          "Missing data is stated, not guessed.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity L, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-04",
+        "name": "Attribute-based product comparison",
+        "category": "Generic core capability",
+        "description": "Compares 2+ products across shared attributes in a comparison component with a short grounded explanation of differences.",
+        "customer_value": "Easier decisions.",
+        "business_value": "Higher conversion on considered purchases.",
+        "required_information": "Product attributes; configured comparison attributes.",
+        "ai_responsibilities": "Explains trade-offs from retrieved data.",
+        "backend_responsibilities": "Fetches attributes; builds comparison table deterministically.",
+        "dependencies": "Attribute data.",
+        "customisation": "Comparison attributes per industry pack.",
+        "feasibility": "High.",
+        "demonstration_value": "Very high.",
+        "risks": "Apples-to-oranges comparisons.",
+        "acceptance_criteria": [
+          "Comparison table is built from backend data; AI text does not contradict it.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-05",
+        "name": "Compatibility via configurable attribute",
+        "category": "Configurable capability",
+        "description": "Where a client configures a compatibility attribute (e.g. fits-model, rated-voltage), the assistant answers suitability/compatibility questions from it.",
+        "customer_value": "Avoids ordering the wrong item.",
+        "business_value": "Fewer returns.",
+        "required_information": "Configured compatibility attribute data.",
+        "ai_responsibilities": "Interprets the dealer's context and explains match/mismatch.",
+        "backend_responsibilities": "Deterministic compatibility check against configured attribute.",
+        "dependencies": "Data availability.",
+        "customisation": "Attribute mapping per client; richer logic via extension.",
+        "feasibility": "Medium.",
+        "demonstration_value": "High.",
+        "risks": "Wrong compatibility claims if data is incomplete.",
+        "acceptance_criteria": [
+          "Compatibility claims are only made when the configured attribute exists; otherwise assistant says it cannot verify.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability M.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-06",
+        "name": "Alternatives, similar products and substitution",
+        "category": "Generic core capability",
+        "description": "Suggests similar products and substitutes (including when an item is unavailable per demo/live stock hook).",
+        "customer_value": "Keeps the purchase moving.",
+        "business_value": "Saves lost sales.",
+        "required_information": "Product attributes; category; stock indicator.",
+        "ai_responsibilities": "Judges and explains similarity.",
+        "backend_responsibilities": "Candidate retrieval by deterministic similarity rules; stock hook.",
+        "dependencies": "Stock placeholder (demo values).",
+        "customisation": "Similarity rules configurable/extensible.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "High.",
+        "risks": "Poor substitutes.",
+        "acceptance_criteria": [
+          "Alternatives come only from retrieved candidates.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PD-07",
+        "name": "Budget-based discovery",
+        "category": "Generic core capability",
+        "description": "Finds products within a stated budget; backend does price eligibility so the model never sees raw pricing.",
+        "customer_value": "Shop within a budget.",
+        "business_value": "Protects pricing confidentiality while enabling budget queries.",
+        "required_information": "Customer-specific prices (backend only).",
+        "ai_responsibilities": "Extracts budget and intent; explains results.",
+        "backend_responsibilities": "Price-eligibility calculation; returns approved eligible IDs only.",
+        "dependencies": "Existing pricing permissions.",
+        "customisation": "None.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Price leakage via model prompts.",
+        "acceptance_criteria": [
+          "Raw prices never appear in model inputs.",
+          "Results respect customer-specific pricing.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-01",
+        "name": "Product cards with Add to Cart (placeholder list)",
+        "category": "Generic core capability",
+        "description": "Product cards offer Add to Cart which adds to a clearly labelled demo placeholder purchase list. Never presented as a real Commerce cart. Checkout stays in the normal storefront.",
+        "customer_value": "Customer stays in control.",
+        "business_value": "Safe demonstration of the purchasing flow.",
+        "required_information": "Selected products and quantities.",
+        "ai_responsibilities": "None for the action itself.",
+        "backend_responsibilities": "Maintains placeholder list; extension hook for real cart integration.",
+        "dependencies": "Future real Add to Cart integration.",
+        "customisation": "Client may replace placeholder with real cart integration.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Misrepresenting placeholder as a real cart.",
+        "acceptance_criteria": [
+          "Placeholder list is explicitly labelled.",
+          "AI cannot add items or place orders itself.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity L, demo H, reusability M.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-02",
+        "name": "Editable session purchase list",
+        "category": "Generic core capability",
+        "description": "Dealer edits quantities, removes items and adds notes on the placeholder purchase list.",
+        "customer_value": "Full control before checkout.",
+        "business_value": "Higher-quality baskets.",
+        "required_information": "List items and quantities.",
+        "ai_responsibilities": "Can suggest edits.",
+        "backend_responsibilities": "List state management.",
+        "dependencies": "PA-01.",
+        "customisation": "None.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "None significant.",
+        "acceptance_criteria": [
+          "Edits are reflected immediately and survive refresh within the tab session.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity L, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-03",
+        "name": "Quick Order from typed or pasted list",
+        "category": "Generic core capability",
+        "description": "Dealer pastes or types lines such as '20 of 48213, 10 of 51007'. AI parses; backend validates codes, quantities and visibility; unresolved lines produce clarifications or substitutions.",
+        "customer_value": "Large orders in seconds.",
+        "business_value": "Strong B2B productivity feature.",
+        "required_information": "Free text list; catalogue codes.",
+        "ai_responsibilities": "Parses messy lines into structured candidates.",
+        "backend_responsibilities": "validateQuickOrderLines; permission checks; returns validated lines and issues.",
+        "dependencies": "Catalogue codes/identifiers.",
+        "customisation": "Code formats per industry pack.",
+        "feasibility": "High.",
+        "demonstration_value": "Very high.",
+        "risks": "Mis-parsed quantities.",
+        "acceptance_criteria": [
+          "Every line is validated by the backend.",
+          "Unresolvable lines are reported, not guessed.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-04",
+        "name": "Budget purchase planner",
+        "category": "Generic core capability",
+        "description": "'I have 50,000, prepare my usual items.' Builds a suggested list within budget from purchase history; backend computes totals.",
+        "customer_value": "Plan purchasing to budget.",
+        "business_value": "Increases basket value predictably.",
+        "required_information": "Purchase history; customer prices (backend).",
+        "ai_responsibilities": "Interprets goal; explains the plan.",
+        "backend_responsibilities": "Budget allocation algorithm in Java; totals.",
+        "dependencies": "PA-05, RI-01.",
+        "customisation": "Allocation rules configurable.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "High.",
+        "risks": "Misleading totals if price rules change.",
+        "acceptance_criteria": [
+          "Totals are computed by backend and never exceed the stated budget.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M-H, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-05",
+        "name": "Quantity recommendations",
+        "category": "Configurable capability",
+        "description": "Recommends quantities from the user's purchase history; business-controlled toggle.",
+        "customer_value": "Right quantities without guessing.",
+        "business_value": "Supports upselling/volume steering via controls (CI-03).",
+        "required_information": "User purchase history.",
+        "ai_responsibilities": "Explains the suggestion.",
+        "backend_responsibilities": "Quantity derivation rules.",
+        "dependencies": "RI-01.",
+        "customisation": "Pack-size/MOQ rules via extension.",
+        "feasibility": "High.",
+        "demonstration_value": "Medium.",
+        "risks": "Presenting estimates as facts.",
+        "acceptance_criteria": [
+          "Estimates labelled as estimates.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity L-M, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-06",
+        "name": "Basket optimisation",
+        "category": "Configurable capability",
+        "description": "Reviews the purchase list: flags missing usual items, duplicates against pending orders, and complementary add-ons.",
+        "customer_value": "Avoids forgotten/duplicate items.",
+        "business_value": "Raises order value and completeness.",
+        "required_information": "Purchase list; history; pending orders.",
+        "ai_responsibilities": "Explains findings.",
+        "backend_responsibilities": "Deterministic checks.",
+        "dependencies": "RI-01, RI-02, CI-01.",
+        "customisation": "Rules extensible.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Pushy recommendations.",
+        "acceptance_criteria": [
+          "Each flag is explainable and traceable to data.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PA-07",
+        "name": "Reorder from a previous order",
+        "category": "Generic core capability",
+        "description": "Builds a purchase list from a past order of the logged-in user, with availability and substitution handling.",
+        "customer_value": "Repeat orders in seconds.",
+        "business_value": "Drives repeat purchasing.",
+        "required_information": "Order history of the logged-in user.",
+        "ai_responsibilities": "Resolves 'same as last time'.",
+        "backend_responsibilities": "getOrderById/History; list creation.",
+        "dependencies": "OM-01.",
+        "customisation": "None.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Out-of-catalogue legacy items.",
+        "acceptance_criteria": [
+          "Only the logged-in user's own orders are used.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV H, complexity L-M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "OM-01",
+        "name": "Order retrieval, status and tracking (Commerce-held data)",
+        "category": "Generic core capability",
+        "description": "Latest order, order history, order by ID, status, consignment, delivery and tracking reference — only data held in Commerce. Logged-in user's own orders only.",
+        "customer_value": "Instant order answers.",
+        "business_value": "Reduces support load.",
+        "required_information": "Order, consignment and delivery data.",
+        "ai_responsibilities": "Identifies which order is meant; explains status.",
+        "backend_responsibilities": "getLatestOrder/getOrderById/getOrderHistory/getOrderTracking with authorisation and isolation.",
+        "dependencies": "Seeded demo data.",
+        "customisation": "Carrier lookups are roadmap/extension.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Cross-customer leakage if isolation fails.",
+        "acceptance_criteria": [
+          "Only the logged-in user's orders are returned.",
+          "Assistant distinguishes stored status from live carrier data (none in baseline).",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV H, complexity L-M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "OM-02",
+        "name": "Natural-language order search",
+        "category": "Generic core capability",
+        "description": "'Undelivered orders last month over 20,000.' AI extracts filters; a predefined backend query applies them.",
+        "customer_value": "Find orders without filter forms.",
+        "business_value": "Productivity.",
+        "required_information": "Order data.",
+        "ai_responsibilities": "Extracts filter parameters.",
+        "backend_responsibilities": "searchOrders with validated filter contract (parameterised queries).",
+        "dependencies": "OM-01.",
+        "customisation": "Filter set extensible.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Ambiguous dates/amount currency.",
+        "acceptance_criteria": [
+          "Filters are validated before execution; no AI-generated queries.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV M, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "OM-03",
+        "name": "Order summaries and order FAQs",
+        "category": "Generic core capability",
+        "description": "Plain-language summaries of an order and answers to order-related questions grounded in order data and configured FAQ content.",
+        "customer_value": "Understand orders quickly.",
+        "business_value": "Fewer queries.",
+        "required_information": "Order data; FAQ content.",
+        "ai_responsibilities": "Summarises and explains.",
+        "backend_responsibilities": "Retrieval and validation.",
+        "dependencies": "OM-01, KN-01.",
+        "customisation": "FAQ content configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "Medium.",
+        "risks": "Summaries diverging from data.",
+        "acceptance_criteria": [
+          "Summary values match backend order data.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV M, complexity L, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "RI-01",
+        "name": "Rule-based replenishment detection",
+        "category": "Generic core capability",
+        "description": "From the logged-in user's purchase history, estimates usual purchase interval and quantity per product (e.g. recent average gap) and flags products due or overdue. Thresholds configurable. Estimates, not facts.",
+        "customer_value": "Never run out unexpectedly.",
+        "business_value": "Repeat revenue.",
+        "required_information": "User's order history.",
+        "ai_responsibilities": "Explains suggestions; frames estimates clearly.",
+        "backend_responsibilities": "Deterministic interval/quantity calculation; due/overdue flags.",
+        "dependencies": "Sufficient order history.",
+        "customisation": "Window, thresholds, minimum orders configurable; advanced forecasting later.",
+        "feasibility": "High.",
+        "demonstration_value": "Very high.",
+        "risks": "Presenting predictions as certainty.",
+        "acceptance_criteria": [
+          "Output separates historical facts from estimates.",
+          "Thresholds configurable.",
+          "Per-user history only (unit-level is roadmap, marked in code).",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV VH, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "RI-02",
+        "name": "Pending-order awareness",
+        "category": "Generic core capability",
+        "description": "Checks open/pending orders so suggestions do not duplicate quantities already on the way.",
+        "customer_value": "No duplicate ordering.",
+        "business_value": "Customer trust.",
+        "required_information": "Open orders.",
+        "ai_responsibilities": "Explains adjustments.",
+        "backend_responsibilities": "getPendingOrders; netting logic.",
+        "dependencies": "OM-01.",
+        "customisation": "None.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Stale order status.",
+        "acceptance_criteria": [
+          "Suggested quantities account for pending orders.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity L, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "RI-03",
+        "name": "Proactive welcome panel",
+        "category": "Configurable capability",
+        "description": "On page open, shows proactive suggestions where data supports them: items due, pending orders, pattern alerts, starters.",
+        "customer_value": "Value before they ask.",
+        "business_value": "Drives engagement and reorders.",
+        "required_information": "Outputs of RI-01, RI-02, RI-04.",
+        "ai_responsibilities": "Frames the suggestions.",
+        "backend_responsibilities": "Precomputes suggestions deterministically.",
+        "dependencies": "RI-01, RI-02, RI-04.",
+        "customisation": "Panel items toggleable.",
+        "feasibility": "High.",
+        "demonstration_value": "Very high.",
+        "risks": "Irrelevant or intrusive nudges.",
+        "acceptance_criteria": [
+          "Panel appears with grounded items only; hidden if no data.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "RI-04",
+        "name": "Purchase-pattern change detection",
+        "category": "Configurable capability",
+        "description": "Detects significant changes versus the user's usual pattern (e.g. quantity down vs trailing average) and reports them as observations with the comparison shown.",
+        "customer_value": "Early warning of changing needs.",
+        "business_value": "Churn/early opportunity signal.",
+        "required_information": "User history.",
+        "ai_responsibilities": "Phrases observations carefully.",
+        "backend_responsibilities": "Statistical comparison against thresholds.",
+        "dependencies": "Sufficient history.",
+        "customisation": "Thresholds configurable.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "Very high.",
+        "risks": "False positives; implying causes.",
+        "acceptance_criteria": [
+          "Observation states the numbers compared.",
+          "Does not assert causes.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV H, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "RI-05",
+        "name": "Suggested repeat-order list",
+        "category": "Generic core capability",
+        "description": "Combines due items, quantities and pending orders into a suggested purchase list for review and approval.",
+        "customer_value": "Next order prepared in one step.",
+        "business_value": "Core replenishment value.",
+        "required_information": "RI-01, RI-02 outputs.",
+        "ai_responsibilities": "Explains each line.",
+        "backend_responsibilities": "List assembly.",
+        "dependencies": "RI-01, RI-02, PA-01.",
+        "customisation": "None.",
+        "feasibility": "High.",
+        "demonstration_value": "Very high.",
+        "risks": "Over-ordering.",
+        "acceptance_criteria": [
+          "Customer reviews and approves every addition.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV VH, BV VH, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CI-01",
+        "name": "Cross-sell and complementary products",
+        "category": "Configurable capability",
+        "description": "Deterministic complementary suggestions (co-purchase history, category rules); AI explains why.",
+        "customer_value": "Discovers needed add-ons.",
+        "business_value": "Raises order value.",
+        "required_information": "Order/co-purchase data; rule table.",
+        "ai_responsibilities": "Explains rationale.",
+        "backend_responsibilities": "Rule and co-purchase computation.",
+        "dependencies": "Order data volume.",
+        "customisation": "Rules extensible.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Irrelevant suggestions.",
+        "acceptance_criteria": [
+          "Suggestions come from backend logic; AI only explains.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV H, BV VH, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CI-02",
+        "name": "Bundle suggestions",
+        "category": "Configurable capability",
+        "description": "Suggests bundles from deterministic rules/co-purchase patterns with an explanation.",
+        "customer_value": "Convenient grouped purchases.",
+        "business_value": "Higher AOV.",
+        "required_information": "Co-purchase data; bundle rules.",
+        "ai_responsibilities": "Explains.",
+        "backend_responsibilities": "Bundle computation.",
+        "dependencies": "CI-01.",
+        "customisation": "Rules extensible.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "High.",
+        "risks": "Weak bundles on sparse data.",
+        "acceptance_criteria": [
+          "Bundles are rule-generated and validated.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV H, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CI-03",
+        "name": "Business recommendation controls",
+        "category": "Configurable capability",
+        "description": "Backoffice levers per recommendation type (quantity, cross-sell, bundle, basket, margin-based): enable/disable, weighting, and a business-priority/margin attribute per product used for ranking. Margin/priority data never goes to the LLM or customers; suggestions stay truthful.",
+        "customer_value": "Relevant offers.",
+        "business_value": "Business can steer and monetise recommendations.",
+        "required_information": "Business priority/margin attribute per product.",
+        "ai_responsibilities": "None (never sees margin data).",
+        "backend_responsibilities": "Ranking and weighting in Java; attribute storage.",
+        "dependencies": "Attribute source (custom or existing).",
+        "customisation": "Configurable; extension for custom scoring.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "High.",
+        "risks": "Confidential margin leakage; recommendations misrepresented as best-fit.",
+        "acceptance_criteria": [
+          "Margin/priority never appears in prompts, responses or the 'Why this?' panel.",
+          "Toggles take effect without redeploy.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "CI-04",
+        "name": "Customer-linked interest events",
+        "category": "Configurable capability",
+        "description": "Records structured interest events (viewed, compared, shortlisted, requested-but-not-found) linked to the customer in a dedicated custom table. Enabled by default with a visible notice, toggleable per client, 90-day default retention (configurable). No raw chat text; written by backend only.",
+        "customer_value": "Better future experience.",
+        "business_value": "Sales and merchandising signal.",
+        "required_information": "Event type, product/category reference, timestamp, customer reference.",
+        "ai_responsibilities": "Classifies events from the conversation.",
+        "backend_responsibilities": "Writes events; retention purge; notice display.",
+        "dependencies": "Custom item type.",
+        "customisation": "Toggle, retention.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Privacy/consent; retention compliance.",
+        "acceptance_criteria": [
+          "Notice is shown when enabled.",
+          "No raw chat text stored.",
+          "Records older than retention are purged.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV H, complexity M, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "KN-01",
+        "name": "Approved FAQ and policy content",
+        "category": "Configurable capability",
+        "description": "Answers business, delivery and policy FAQs from admin-configured approved content only; says so when no approved answer exists.",
+        "customer_value": "Quick policy answers.",
+        "business_value": "Fewer queries.",
+        "required_information": "Admin-maintained FAQ entries.",
+        "ai_responsibilities": "Matches question to approved entries and phrases the answer.",
+        "backend_responsibilities": "Stores/serves approved content.",
+        "dependencies": "Content authored by client.",
+        "customisation": "Content per industry pack/client.",
+        "feasibility": "High.",
+        "demonstration_value": "Medium.",
+        "risks": "Stale content.",
+        "acceptance_criteria": [
+          "Answers are derived only from approved entries.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV M, complexity L, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-01",
+        "name": "Backoffice runtime configuration",
+        "category": "Generic core capability",
+        "description": "Backoffice-managed configuration items for feature toggles, thresholds, prompts, search fields, terminology, provider and model routing, retention and notice text.",
+        "customer_value": "Indirect: consistent behaviour.",
+        "business_value": "Enables per-client adaptation without code changes.",
+        "required_information": "Configuration values.",
+        "ai_responsibilities": "None.",
+        "backend_responsibilities": "Config item types; validated reads; defaults.",
+        "dependencies": "Custom item types.",
+        "customisation": "Core.",
+        "feasibility": "High.",
+        "demonstration_value": "High.",
+        "risks": "Misconfiguration.",
+        "acceptance_criteria": [
+          "Every capability has a toggle.",
+          "Changes apply at runtime.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity M, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-02",
+        "name": "Per-task multi-provider model routing",
+        "category": "Generic core capability",
+        "description": "Configure provider/model per task (intent, translation, relevance, composition) across Gemini, Anthropic and OpenAI; switch providers on/off. Keys in secure properties; Backoffice holds references.",
+        "customer_value": "Indirect.",
+        "business_value": "Best model per job; vendor flexibility; cost control.",
+        "required_information": "Provider configuration; key references.",
+        "ai_responsibilities": "n/a",
+        "backend_responsibilities": "Provider abstraction; timeouts/retries/fallback; token tracking; key handling outside source control.",
+        "dependencies": "Provider APIs.",
+        "customisation": "New providers via extension.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "High.",
+        "risks": "Free-tier terms on data use; provider outages; inconsistent outputs.",
+        "acceptance_criteria": [
+          "Routing changes with configuration only.",
+          "No key appears in source or Backoffice.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity M-H, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-03",
+        "name": "Sanitisation layer",
+        "category": "Generic core capability",
+        "description": "Minimises, masks and tokenises data before any external model call (including translation); reverse mapping only inside the trusted backend; no assumption that tokens equal anonymity.",
+        "customer_value": "Indirect.",
+        "business_value": "Enterprise privacy requirement.",
+        "required_information": "Field classification rules.",
+        "ai_responsibilities": "n/a",
+        "backend_responsibilities": "Data minimisation; masking; token maps; output restoration; validation.",
+        "dependencies": "None.",
+        "customisation": "Field rules configurable/extensible.",
+        "feasibility": "Medium.",
+        "demonstration_value": "High.",
+        "risks": "Residual identifiability in context.",
+        "acceptance_criteria": [
+          "Only task-required data is sent.",
+          "Sensitive fields never appear in outbound prompts.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity M-H, demo H, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-04",
+        "name": "Tool catalogue and controlled orchestrator",
+        "category": "Generic core capability",
+        "description": "Predefined tool catalogue with input/output contracts; orchestrator supports agent/tool hand-offs, sequential and parallel execution, context preservation, conditional next steps, retries/fallbacks, and execution limits; backend validates every proposed step.",
+        "customer_value": "Indirect.",
+        "business_value": "Core of controlled multi-agent behaviour.",
+        "required_information": "Tool definitions and permitted workflows.",
+        "ai_responsibilities": "Proposes next step.",
+        "backend_responsibilities": "Validates against catalogue/workflow; executes Java tools; limits.",
+        "dependencies": "None.",
+        "customisation": "Add tools/agents via extension.",
+        "feasibility": "Medium-High.",
+        "demonstration_value": "Very high.",
+        "risks": "Loops; invented tools.",
+        "acceptance_criteria": [
+          "Unknown tools are rejected.",
+          "Execution limits stop runaway loops.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity H, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-05",
+        "name": "Audit and observability",
+        "category": "Generic core capability",
+        "description": "Audit logs (session reference, intent, confidence, hand-offs, tool selections/outcomes, errors, timestamps, model/provider, token usage) without logging full prompts or personal data; configurable retention and access.",
+        "customer_value": "Indirect.",
+        "business_value": "Governance and cost visibility.",
+        "required_information": "Event metadata.",
+        "ai_responsibilities": "n/a",
+        "backend_responsibilities": "Audit writing; redaction; monitoring.",
+        "dependencies": "None.",
+        "customisation": "Retention configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "Medium.",
+        "risks": "Over-logging sensitive data.",
+        "acceptance_criteria": [
+          "Required fields are logged.",
+          "Full prompts and PII are not.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV L, BV H, complexity M, demo M, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-06",
+        "name": "Per-customer usage caps",
+        "category": "Configurable capability",
+        "description": "Configurable limits per customer (messages/tokens per period) with graceful messaging.",
+        "customer_value": "Predictable service.",
+        "business_value": "Cost and abuse control.",
+        "required_information": "Usage counters.",
+        "ai_responsibilities": "n/a",
+        "backend_responsibilities": "Counting and enforcement.",
+        "dependencies": "None.",
+        "customisation": "Limits configurable.",
+        "feasibility": "High.",
+        "demonstration_value": "Low.",
+        "risks": "Hitting limits mid-demo.",
+        "acceptance_criteria": [
+          "Limits enforce and message gracefully.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV L, BV M, complexity L, demo L, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-07",
+        "name": "Industry packs",
+        "category": "Generic core capability",
+        "description": "Switchable packs (tyres/auto parts, paints/coatings, cement/building materials, plywood/wood panels, electrical): seed data generators, dealers, products, orders, terminology, attribute mappings, sample prompts and theme. A single configuration switch reconfigures the page live; all packs' data coexist. Generators live in the repo.",
+        "customer_value": "Experience matches their industry.",
+        "business_value": "Fast, convincing client demos; proves industry-agnostic design.",
+        "required_information": "Pack definitions and seed data.",
+        "ai_responsibilities": "None.",
+        "backend_responsibilities": "Pack selection; theme/terminology application; seeded data.",
+        "dependencies": "How coexistence is modelled (research).",
+        "customisation": "New packs by adding data and configuration.",
+        "feasibility": "Medium.",
+        "demonstration_value": "Very high.",
+        "risks": "Seed data drifting from generic code.",
+        "acceptance_criteria": [
+          "Switching a pack changes theme, products, orders and prompts without code changes.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV M, BV VH, complexity M, demo VH, reusability H.",
+        "toggleable_in_backoffice": true
+      },
+      {
+        "id": "PL-08",
+        "name": "Extension points",
+        "category": "Extension-driven capability",
+        "description": "Documented extension points for custom Java services, extra tools, industry agents, workflows, rules, integrations and recommendation logic.",
+        "customer_value": "Indirect.",
+        "business_value": "Lets clients adapt the accelerator.",
+        "required_information": "Interfaces and contracts.",
+        "ai_responsibilities": "n/a",
+        "backend_responsibilities": "Registration and validation of extensions.",
+        "dependencies": "PL-04.",
+        "customisation": "Core.",
+        "feasibility": "Medium.",
+        "demonstration_value": "Medium.",
+        "risks": "Weak boundaries.",
+        "acceptance_criteria": [
+          "Custom tool can be added without modifying core code.",
+          "Capability can be enabled or disabled through Backoffice configuration."
+        ],
+        "assessment": "CV L, BV H, complexity M, demo L, reusability VH.",
+        "toggleable_in_backoffice": true
+      }
+    ],
+    "illustrative_tool_catalogue_not_final": [
+      "searchProducts",
+      "getProductDetails",
+      "getProductsByIds",
+      "getComparisonAttributes",
+      "getAlternatives",
+      "getBudgetEligibleProducts",
+      "validateQuickOrderLines",
+      "getLatestOrder",
+      "getOrderById",
+      "getOrderHistory",
+      "searchOrders",
+      "getOrderTracking",
+      "getPendingOrders",
+      "getCustomerPurchaseHistory",
+      "getReplenishmentRecommendations",
+      "detectPurchasePatternChanges",
+      "getComplementaryProducts",
+      "getBundleSuggestions",
+      "getFaqAnswer",
+      "getStockInfo (demo placeholder)",
+      "recordInterestEvent (backend-only)",
+      "translateText (backend step)"
+    ],
+    "user_journeys": [
+      "J1 Prepare next order: open page -> see proactive panel -> ask for help -> review suggested list -> edit/approve additions -> go to storefront checkout.",
+      "J2 Find a product by need: describe need -> clarify -> see cards -> compare -> add to purchase list.",
+      "J3 Place a large quick order: paste list -> validation results -> substitutions -> purchase list.",
+      "J4 Chase an order: ask for status/search -> see summary -> contact manager suggestion if unresolved.",
+      "J5 Plan to a budget: state budget -> receive budgeted list -> adjust.",
+      "J6 Switch language: write in own language -> receive answer in same language.",
+      "J7 Presenter switches industry pack for a client demo."
+    ],
+    "demonstration_scenarios": [
+      {
+        "id": "SC-01",
+        "name": "Next-order assistant",
+        "industry_example": "Tyres and auto parts",
+        "business_context": "Dealer reorders on a rhythm; assistant prepares the next order.",
+        "customer_persona": "Ravi, purchasing manager at a regional tyre dealer.",
+        "initial_prompt": "I need to prepare my next order. Can you help me identify what I should purchase?",
+        "expected_system_behaviour": "Understand intent; fetch history; detect due/overdue; net out pending orders; add complementary items; assemble suggested list with explanations; await approval.",
+        "capabilities_involved": [
+          "CF-01",
+          "CF-02",
+          "RI-01",
+          "RI-02",
+          "RI-05",
+          "CI-01",
+          "PA-05",
+          "PA-06",
+          "PA-01",
+          "PA-02",
+          "CF-08"
+        ],
+        "required_backend_retrievals": [
+          "getCustomerPurchaseHistory",
+          "getReplenishmentRecommendations",
+          "getPendingOrders",
+          "getComplementaryProducts",
+          "getProductsByIds"
+        ],
+        "ai_agent_interactions": "Intent agent -> deterministic replenishment tools -> relevance/explanation agent -> composition agent.",
+        "customer_facing_response": "A suggested list with product cards, estimated due dates labelled as estimates, a note on an item already pending, add-ons with reasons, and a purchase list to review.",
+        "expected_business_value": "Fewer stock-outs; repeat revenue; higher basket.",
+        "demonstration_considerations": "Seed one dealer with a clear 30-day rhythm, one overdue item, one pending order."
+      },
+      {
+        "id": "SC-02",
+        "name": "Need-based discovery",
+        "industry_example": "Paints and coatings",
+        "business_context": "Dealer describes a need rather than a product name.",
+        "customer_persona": "Meera, store owner at a paint dealership.",
+        "initial_prompt": "I need something to waterproof an exterior concrete wall, medium coverage, under 3000 a unit.",
+        "expected_system_behaviour": "Extract keywords and budget; ask a clarifying question about surface/finish; search; backend applies price eligibility; relevance agent filters; show cards; offer comparison.",
+        "capabilities_involved": [
+          "CF-02",
+          "PD-01",
+          "PD-02",
+          "PD-07",
+          "PD-04",
+          "CF-03"
+        ],
+        "required_backend_retrievals": [
+          "searchProducts",
+          "getBudgetEligibleProducts",
+          "getProductDetails",
+          "getProductsByIds"
+        ],
+        "ai_agent_interactions": "Intent/extraction -> deterministic search -> relevance agent.",
+        "customer_facing_response": "A clarifying question, then 3 grounded product cards and an offer to compare.",
+        "expected_business_value": "Higher conversion from vague needs.",
+        "demonstration_considerations": "Show that no raw prices reach the model."
+      },
+      {
+        "id": "SC-03",
+        "name": "Messy quick order",
+        "industry_example": "Electrical",
+        "business_context": "Dealer pastes an informal list.",
+        "customer_persona": "Anil, procurement lead at an electrical distributor.",
+        "initial_prompt": "Need 20 of EL-4821, 10 x 2.5mm cable 100m, 5 of EL-9910, and whatever replaces EL-1033.",
+        "expected_system_behaviour": "Parse lines; backend validates codes/quantities; resolve descriptions; offer substitution for unavailable/discontinued items; build purchase list.",
+        "capabilities_involved": [
+          "PA-03",
+          "PD-06",
+          "PA-02",
+          "PD-01"
+        ],
+        "required_backend_retrievals": [
+          "validateQuickOrderLines",
+          "searchProducts",
+          "getAlternatives",
+          "getStockInfo"
+        ],
+        "ai_agent_interactions": "Parsing agent -> validation tool -> alternative agent.",
+        "customer_facing_response": "Validated lines, one clarified line, a substitution suggestion and an editable list.",
+        "expected_business_value": "Large orders in seconds.",
+        "demonstration_considerations": "Include one deliberately unresolvable line to show honesty."
+      },
+      {
+        "id": "SC-04",
+        "name": "Budget planner",
+        "industry_example": "Cement and building materials",
+        "business_context": "Dealer has a fixed monthly budget.",
+        "customer_persona": "Suresh, owner of a building-materials depot.",
+        "initial_prompt": "I have 5 lakh to spend this month. Prepare my usual items.",
+        "expected_system_behaviour": "Interpret budget goal; fetch usual items and quantities; backend allocates within budget and computes totals; AI explains trade-offs.",
+        "capabilities_involved": [
+          "PA-04",
+          "PA-05",
+          "RI-01",
+          "PA-02",
+          "CF-03"
+        ],
+        "required_backend_retrievals": [
+          "getCustomerPurchaseHistory",
+          "getReplenishmentRecommendations",
+          "getBudgetEligibleProducts"
+        ],
+        "ai_agent_interactions": "Intent agent -> planner tool -> explanation agent.",
+        "customer_facing_response": "A budgeted list with totals from the backend and notes on what was left out and why.",
+        "expected_business_value": "Predictable, larger planned purchases.",
+        "demonstration_considerations": "Highlight that totals are computed by Java."
+      },
+      {
+        "id": "SC-05",
+        "name": "Pattern-change alert",
+        "industry_example": "Plywood and wood panels",
+        "business_context": "On opening the page the dealer sees an early signal.",
+        "customer_persona": "Kavita, owner of a plywood trading shop.",
+        "initial_prompt": "(Opens the page; no prompt.)",
+        "expected_system_behaviour": "Welcome panel computes comparisons versus the user's trailing pattern and shows observations with numbers.",
+        "capabilities_involved": [
+          "RI-03",
+          "RI-04",
+          "RI-01",
+          "CF-08"
+        ],
+        "required_backend_retrievals": [
+          "detectPurchasePatternChanges",
+          "getCustomerPurchaseHistory"
+        ],
+        "ai_agent_interactions": "Deterministic detection -> framing agent.",
+        "customer_facing_response": "Panel: 'Your 18mm ply orders are 40% below your usual quantity over the last 2 orders' with the numbers; no assumed cause.",
+        "expected_business_value": "Early churn/opportunity signal; proactive value.",
+        "demonstration_considerations": "Make clear it is an observation, not a diagnosis."
+      },
+      {
+        "id": "SC-06",
+        "name": "Order intelligence",
+        "industry_example": "Tyres and auto parts",
+        "business_context": "Dealer chases deliveries.",
+        "customer_persona": "Ravi, purchasing manager.",
+        "initial_prompt": "Show my undelivered orders from last month over 20,000 and where the latest one is.",
+        "expected_system_behaviour": "Extract filters; backend search with validated filters; fetch latest order status/tracking reference (Commerce-held); summarise.",
+        "capabilities_involved": [
+          "OM-01",
+          "OM-02",
+          "OM-03",
+          "CF-03"
+        ],
+        "required_backend_retrievals": [
+          "searchOrders",
+          "getLatestOrder",
+          "getOrderTracking"
+        ],
+        "ai_agent_interactions": "Filter extraction -> deterministic retrieval -> summary agent.",
+        "customer_facing_response": "Order summary cards and a status explanation distinguishing stored status from live carrier data.",
+        "expected_business_value": "Lower support load.",
+        "demonstration_considerations": "Try asking for another dealer's order to show isolation."
+      },
+      {
+        "id": "SC-07",
+        "name": "Comparison with explanation",
+        "industry_example": "Paints and coatings",
+        "business_context": "Dealer deciding between products.",
+        "customer_persona": "Meera, store owner.",
+        "initial_prompt": "Compare these three exterior primers and tell me which suits a coastal area.",
+        "expected_system_behaviour": "Fetch attributes; build comparison deterministically; AI explains differences strictly from data; open the 'Why this?' panel.",
+        "capabilities_involved": [
+          "PD-04",
+          "PD-03",
+          "PD-05",
+          "CF-08",
+          "CF-03"
+        ],
+        "required_backend_retrievals": [
+          "getProductsByIds",
+          "getComparisonAttributes"
+        ],
+        "ai_agent_interactions": "Comparison tool -> explanation agent.",
+        "customer_facing_response": "Comparison table plus a grounded recommendation and the 'Why this?' trace; states when data is insufficient.",
+        "expected_business_value": "Considered purchases convert.",
+        "demonstration_considerations": "Show an honest 'I cannot verify that from the data' moment."
+      },
+      {
+        "id": "SC-08",
+        "name": "Basket optimisation",
+        "industry_example": "Electrical",
+        "business_context": "Dealer reviews a list before checkout.",
+        "customer_persona": "Anil, procurement lead.",
+        "initial_prompt": "Review my list before I go to checkout.",
+        "expected_system_behaviour": "Check missing usual items, duplicates against pending orders, complementary add-ons; business controls influence ranking invisibly.",
+        "capabilities_involved": [
+          "PA-06",
+          "RI-02",
+          "CI-01",
+          "CI-03",
+          "PA-02"
+        ],
+        "required_backend_retrievals": [
+          "getPendingOrders",
+          "getReplenishmentRecommendations",
+          "getComplementaryProducts"
+        ],
+        "ai_agent_interactions": "Rules tools -> explanation agent.",
+        "customer_facing_response": "Flags: one forgotten usual item, one duplicate of a pending order, two add-ons with reasons.",
+        "expected_business_value": "Higher AOV, fewer mistakes.",
+        "demonstration_considerations": "Toggle a recommendation type in Backoffice live."
+      },
+      {
+        "id": "SC-09",
+        "name": "Multilingual flow",
+        "industry_example": "Cement and building materials",
+        "business_context": "Dealer prefers their own language.",
+        "customer_persona": "Suresh, owner.",
+        "initial_prompt": "(A request written in Hindi to prepare next order.)",
+        "expected_system_behaviour": "Detect language; translate to English (identifiers protected); run the replenishment flow; translate the reply and labels back.",
+        "capabilities_involved": [
+          "CF-05",
+          "RI-05",
+          "CF-01"
+        ],
+        "required_backend_retrievals": [
+          "translateText",
+          "getReplenishmentRecommendations",
+          "getPendingOrders"
+        ],
+        "ai_agent_interactions": "Translation step -> same agents as SC-01 -> translation step.",
+        "customer_facing_response": "The full answer in the dealer's language with product codes unchanged.",
+        "expected_business_value": "International reach.",
+        "demonstration_considerations": "Mention latency and show progress indicators."
+      },
+      {
+        "id": "SC-10",
+        "name": "Industry switch",
+        "industry_example": "Multiple",
+        "business_context": "Executive demo to clients in different industries.",
+        "customer_persona": "Presenter.",
+        "initial_prompt": "(Change the active industry pack in configuration; reload the page.)",
+        "expected_system_behaviour": "Page theme, terminology, sample prompts, products, orders and dealers change to the selected industry; same assistant, no code changes.",
+        "capabilities_involved": [
+          "PL-07",
+          "PL-01",
+          "CF-01"
+        ],
+        "required_backend_retrievals": [
+          "Pack configuration; seeded data for each pack"
+        ],
+        "ai_agent_interactions": "n/a (configuration-driven).",
+        "customer_facing_response": "Same page, now speaking paints, tyres, cement or plywood.",
+        "expected_business_value": "Proves the accelerator is industry-agnostic.",
+        "demonstration_considerations": "Rehearse the switch; keep all packs' data loaded."
+      }
+    ],
+    "execution_and_orchestration_principles": [
+      "AI is not the execution layer. AI interprets, reasons, orchestrates and communicates; backend Java executes and retrieves.",
+      "The LLM never generates SQL/FlexibleSearch for execution, never accesses the database, never executes arbitrary Java, never invents tools/APIs, never accesses another customer's data, never invents availability, price, order status or facts, never performs transactions without backend authorisation and customer approval.",
+      "Authorisation is always enforced by backend code using existing SAP Commerce authentication/authorisation. No separate authentication mechanism.",
+      "Agents propose the next step; backend validates it against a predefined tool catalogue and permitted workflow. Not every capability needs an AI agent; deterministic Java is preferred where suitable.",
+      "Product/order references flow as IDs: AI returns IDs only; backend hydrates data, prices and images and sends them to the front end. Prices and margin/priority data are never sent to the LLM.",
+      "Responses are grounded in retrieved data; unknown or unsupported requests are stated transparently.",
+      "Privacy-first: data minimisation, sanitisation (including for translation calls), reverse mapping only inside the trusted backend.",
+      "Every capability is individually toggleable and configurable (Backoffice runtime configuration).",
+      "Customer stays in control: Add to Cart goes to a clearly labelled placeholder list; checkout stays in the normal storefront; AI never places orders.",
+      "Historical facts are clearly distinguished from predictions/estimates.",
+      "Flow: message -> intent -> context -> action selection -> backend execution -> result analysis -> further tool/agent invocation -> consolidated response.",
+      "Support agent-to-agent, agent-to-tool, tool-to-agent hand-offs; sequential and parallel execution; context preservation; structured intermediate responses; conditional next steps; clarification; controlled retries/fallbacks; maximum execution limits."
+    ],
+    "ai_responsibilities": [
+      "Understand requests, identify intent and context, extract keywords/parameters, interpret requirements, propose the next permitted tool/agent, analyse and summarise returned results, compare retrieved products, explain recommendations, consolidate results, generate responses, ask clarifying questions, translate when enabled."
+    ],
+    "backend_responsibilities": [
+      "Define tools and contracts; validate AI parameters; decide whether actions are permitted; execute predefined Java/DAO/FlexibleSearch; apply business rules and calculations; enforce authentication, authorisation and customer isolation; validate transactional operations; sanitise before external model calls; validate AI responses; hydrate IDs into data/prices/images; maintain audit logs; evaluate price and stock constraints; store Backoffice configuration."
+    ],
+    "data_privacy_requirements": [
+      "Send the LLM only what the current task needs (data minimisation).",
+      "Avoid exposing personal data, customer details, confidential commercial information, internal identifiers, supplier information, unnecessary order details, sensitive pricing and other customers' data.",
+      "Sanitisation layer: temporary references, masking, attribute removal, controlled backend mappings; restore references only inside the trusted backend. Random tokens do not guarantee anonymity.",
+      "Apply sanitisation to every external model call including translation.",
+      "Prices and margin/priority data never go to the LLM; sensitive calculations (budget eligibility, totals) happen in backend Java.",
+      "Validate AI output (product/order references and tool results) against trusted backend data before returning it.",
+      "Interest events: structured, backend-written, no raw chat text, notice shown, default 90-day retention.",
+      "Verify provider data-use terms (notably free-tier APIs) before recommending them for client data."
+    ],
+    "security_requirements": [
+      "Controlled tool execution through a predefined catalogue only.",
+      "Input validation and output validation.",
+      "Customer data isolation; logged-in user's own data only in baseline.",
+      "Prompt-injection protection and untrusted-content handling.",
+      "Hallucination mitigation through grounding and ID validation.",
+      "Tool permission validation by backend on every proposed step.",
+      "Execution limits, retries and fallbacks; error handling; sensitive data redaction.",
+      "Secure configuration: keys in secure properties/env/Cloud secrets; never in source control.",
+      "Per-customer usage caps."
+    ],
+    "audit_requirements": [
+      "Log session/conversation reference, intent classification, confidence, agent hand-offs, tool selections and outcomes, errors and rejected operations, timestamps, model/provider info and token usage.",
+      "Do not log full prompts, personal information or confidential records indiscriminately.",
+      "Configurable retention and access policies; monitoring of failures and usage."
+    ],
+    "sap_commerce_technology_context": {
+      "platform": "SAP Commerce Cloud; Java; Spring MVC and extension architecture; OCC controllers; facades; services; DAOs; FlexibleSearch; OOTB models; items.xml for custom types only where required.",
+      "layering": "Controller -> Facade -> Service -> DAO / approved integrations.",
+      "reuse": "Reuse ProductModel, CartModel, order, customer and B2B models; do not recreate standard capabilities.",
+      "custom_item_types_expected": [
+        "Configuration (feature toggles, routing, thresholds, prompts, notice text)",
+        "Interest events",
+        "Feedback metadata",
+        "Possibly business priority/margin attribute"
+      ],
+      "deployment_context": "Owner demos locally; clients plug the repo into their own OCC/facade/core layers."
+    },
+    "angular_spartacus_frontend_context": {
+      "stack": "Angular, TypeScript, HTML, SCSS, Spartacus/storefront conventions.",
+      "experience": "Full-page ChatGPT/Claude-style route inside the storefront; modern, polished, responsive, accessible.",
+      "components": [
+        "Product cards (backend-hydrated image/price/demo stock)",
+        "Comparison",
+        "Order summaries",
+        "Suggested/editable purchase list (placeholder, labelled)",
+        "Welcome panel",
+        "Feedback controls",
+        "'Why this?' panel",
+        "Live step indicators and streamed answer",
+        "Industry theming"
+      ],
+      "frontend_examples_supplied": false
+    },
+    "configuration_requirements": [
+      "Backoffice runtime configuration for every capability toggle, thresholds, prompts, search fields, terminology, attribute mappings, approved data sources, orchestration settings, retention, notice text, industry pack selection.",
+      "Model provider/model per task across Gemini, Anthropic and OpenAI with on/off per provider.",
+      "Keys in local.properties (gitignored)/environment/Cloud secrets; project.properties holds safe defaults only.",
+      "Per-customer usage caps; response time target <=10s."
+    ],
+    "extension_requirements": [
+      "Custom Java services, additional predefined tools, industry agents, workflows, business rules, external integrations, client data retrieval services, custom recommendation/product interpretation logic.",
+      "Hook points for live stock, real Add to Cart, unit-level scope, carrier tracking (marked with 'future scope' comments)."
+    ],
+    "non_functional_requirements_to_research": {
+      "performance": "Full response <=10s with progress indicators; minimise LLM calls; parallelise independent tools; translation adds latency.",
+      "scalability": "Concurrent conversations, large B2B catalogues, provider rate limits.",
+      "reliability": "Provider failures, timeouts, retries, fallbacks, partial tool failures, incomplete retrieval.",
+      "cost": "Per-task model routing, token tracking, context trimming, deterministic Java first, caching where suitable, usage caps.",
+      "maintainability": "Generic core vs client-specific separation, configurable tools/agents, extension points, documentation, minimal adaptation across implementations.",
+      "user_experience": "Continuity, polished cards, live progress and streaming, clear errors, clarification questions, customer-controlled actions, responsive, accessible."
+    },
+    "known_constraints": [
+      "Must follow SAP Commerce extension conventions (Controller -> Facade -> Service -> DAO/approved integrations).",
+      "Public repo: no secrets, real customer data or client-specific models.",
+      "Reuse OOTB models; custom item types only where unavoidable (configuration, interest events, feedback, possibly priority attribute).",
+      "Frontend: Angular, TypeScript, HTML, SCSS, Spartacus conventions.",
+      "No unrestricted LLM database access; no AI-generated queries executed."
+    ],
+    "assumptions": [
+      "Existing SAP Commerce authentication provides identity to backend APIs; no separate authentication.",
+      "Seeded demo data is a demo asset; the generic product must work on a client's real data.",
+      "Translation is a backend-controlled step (D17a).",
+      "Product data richness varies; capabilities degrade transparently when data is thin.",
+      "Sample code names (fpp/Cpp) are placeholders."
+    ],
+    "open_questions": [
+      "Where is session context held (browser vs short-lived server-side) while preserving session-only memory and sanitisation?",
+      "How should streamed/progress output be transported through OCC and rendered in Spartacus?",
+      "How are industry packs modelled so all packs' data coexist and the experience switches live (sites, catalogs, base stores, users, theming)?",
+      "What are the current data-use/retention terms of free-tier Gemini API (and other providers) and are they compatible with privacy-first positioning for demos and client guidance?",
+      "Which custom item types are needed (configuration, interest events, feedback) and can events/feedback share one type?",
+      "Where does the business priority/margin attribute live (extend ProductModel vs separate type)?",
+      "Interest-event notice wording and consent presentation per market.",
+      "Supported language list and translation quality validation approach.",
+      "Exact structured response contract between AI, backend and front end.",
+      "Concurrency, latency budget breakdown for <=10s with translation and multi-step chains."
+    ],
+    "areas_requiring_independent_technical_research": [
+      "SAP Commerce: feasibility, extension patterns, OCC integration, facade/service/DAO patterns, FlexibleSearch and retrieval, OOTB model reuse, custom item types (configuration, events, feedback, priority/margin attribute), Backoffice configuration approach.",
+      "Frontend: Angular/Spartacus integration for a full-page route, streaming UI, product cards and interactive components, theming per industry pack.",
+      "AI/orchestration: multi-agent coordination, dynamic tool chaining, intent classification, structured responses, provider integration (Gemini/Anthropic/OpenAI), tool calling, per-task routing, context management, grounding, hallucination mitigation.",
+      "Data/intelligence: product search over generic attributes, deterministic recommendation approaches, rule-based replenishment, pattern-change detection, knowledge retrieval from approved FAQ content.",
+      "Security/governance: sanitisation/tokenisation, customer isolation, prompt injection, tool authorisation, auditability, observability, key handling in a public repo.",
+      "Operations: performance, scalability, cost, deployment, configuration, testing, reliability, error handling, usage caps.",
+      "Industry packs: seed-data generation approach and switching mechanism.",
+      "Translation pipeline: latency, cost, identifier protection, privacy implications."
+    ],
+    "decision_register": [
+      {
+        "id": "D01",
+        "status": "Confirmed",
+        "decision": "Delivery: public GitHub repo, drop-in module for client OCC/facade/core layers; no secrets/real data/client-specific models.",
+        "rationale": "Owner's distribution model."
+      },
+      {
+        "id": "D02",
+        "status": "Confirmed",
+        "decision": "Demo runs on owner's local SAP Commerce with seeded dummy products, orders and carts.",
+        "rationale": "Owner can create data; real data not required."
+      },
+      {
+        "id": "D03",
+        "status": "Confirmed",
+        "decision": "Add to Cart targets a clearly labelled placeholder purchase list; real cart integration deferred; checkout in storefront; AI never places orders.",
+        "rationale": "Customer control; lower integration risk."
+      },
+      {
+        "id": "D04",
+        "status": "Confirmed",
+        "decision": "Baseline persona: dealer / B2B customer buyer only. Approvers, admins, sales reps are roadmap.",
+        "rationale": "Focus."
+      },
+      {
+        "id": "D05",
+        "status": "Confirmed",
+        "decision": "Search supports four request styles: by code, description/keywords, use case, constraints.",
+        "rationale": "Owner: all of them."
+      },
+      {
+        "id": "D06",
+        "status": "Confirmed",
+        "decision": "Search is deterministic and backend-controlled; AI extracts parameters and judges relevance; price/stock constraints evaluated in backend.",
+        "rationale": "Core non-negotiable principle."
+      },
+      {
+        "id": "D07",
+        "status": "Confirmed",
+        "decision": "Conversation memory is session-only, tied to the browser tab; no persisted chat history.",
+        "rationale": "Privacy and simplicity."
+      },
+      {
+        "id": "D08",
+        "status": "Confirmed",
+        "decision": "Customer-linked interest events stored in a dedicated custom table; enabled by default with a visible notice; per-client toggle; default retention 90 days (configurable).",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D08a",
+        "status": "Proposed",
+        "decision": "Guardrails for D08: structured events only (no raw chat text), written by backend only, AI cannot read them back into answers unless explicitly designed.",
+        "rationale": "Privacy; accepted with scope approval, wording to confirm in design."
+      },
+      {
+        "id": "D09",
+        "status": "Confirmed",
+        "decision": "Experience is a full-page ChatGPT/Claude-style interface inside the storefront (not a pop-up), with a welcome panel of proactive suggestions.",
+        "rationale": "Owner emphasis."
+      },
+      {
+        "id": "D10",
+        "status": "Confirmed",
+        "decision": "Order tracking uses Commerce-held data only; carrier lookups deferred.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D11",
+        "status": "Confirmed",
+        "decision": "Replenishment is simple rule-based in baseline; enhancement later.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D12",
+        "status": "Confirmed",
+        "decision": "Purchase-pattern change detection is in the baseline; shown as labelled observations with numbers.",
+        "rationale": "Owner decision; differentiator."
+      },
+      {
+        "id": "D13",
+        "status": "Confirmed",
+        "decision": "Every capability is individually enable/disable and configurable via Backoffice runtime configuration (config item types).",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D14",
+        "status": "Rejected",
+        "decision": "Promotions/offers are out of scope for now (roadmap).",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D15",
+        "status": "Confirmed",
+        "decision": "Cross-sell and bundles use deterministic logic; AI explains.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D16",
+        "status": "Confirmed",
+        "decision": "Knowledge/FAQ answers come only from admin-configured approved content.",
+        "rationale": "Grounding."
+      },
+      {
+        "id": "D17",
+        "status": "Confirmed",
+        "decision": "Multilingual is toggleable: translate input to English, process, translate output back. Identifiers never translated.",
+        "rationale": "Owner design."
+      },
+      {
+        "id": "D17a",
+        "status": "Assumed",
+        "decision": "Translation runs as a backend-controlled step (browser never calls the model provider).",
+        "rationale": "Keys, sanitisation, audit; inferred from owner's Backoffice-config direction."
+      },
+      {
+        "id": "D18",
+        "status": "Confirmed",
+        "decision": "Model provider and model are configurable per task across Gemini, Anthropic and OpenAI; providers can be switched on/off. Demo uses free Gemini plus OpenAI.",
+        "rationale": "Owner decision; plug-and-play."
+      },
+      {
+        "id": "D19",
+        "status": "Confirmed",
+        "decision": "API keys live in secure properties (local.properties gitignored / environment / Cloud secret); project.properties holds safe defaults only; Backoffice holds references, toggles and routing.",
+        "rationale": "Public repo security; matches sample convention."
+      },
+      {
+        "id": "D20",
+        "status": "Confirmed",
+        "decision": "Proactive welcome panel is in the baseline.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D21",
+        "status": "Confirmed",
+        "decision": "Attribute-based comparison and compatibility via a configurable attribute are in the baseline.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D22",
+        "status": "Confirmed",
+        "decision": "Reorder from a previous order is in the baseline.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D23",
+        "status": "Confirmed",
+        "decision": "Ten signature demonstration scenarios.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D24",
+        "status": "Confirmed",
+        "decision": "Business recommendation controls: toggles/weights per recommendation type plus an admin-set priority/margin attribute; margin never sent to LLM or customers.",
+        "rationale": "Monetisation lever."
+      },
+      {
+        "id": "D24a",
+        "status": "Proposed",
+        "decision": "Pushed recommendations are never described as best-fit unless true; explanations remain truthful.",
+        "rationale": "Trust."
+      },
+      {
+        "id": "D25",
+        "status": "Confirmed",
+        "decision": "Quantity recommendations (history-based) and basket optimisation are in the baseline.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D26",
+        "status": "Confirmed",
+        "decision": "Product cards: AI returns product IDs only; backend hydrates price/images; modern polished UI; customer-specific prices shown, never passed to the LLM.",
+        "rationale": "Privacy and trust."
+      },
+      {
+        "id": "D27",
+        "status": "Confirmed",
+        "decision": "Stock is hardcoded demo data (labelled) with a placeholder hook for live stock.",
+        "rationale": "Demo practicality."
+      },
+      {
+        "id": "D28",
+        "status": "Confirmed",
+        "decision": "Off-topic questions are redirected; unsupported requests are declined transparently.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D29",
+        "status": "Confirmed",
+        "decision": "Live step indicators plus streamed, animated final answer.",
+        "rationale": "UX."
+      },
+      {
+        "id": "D30",
+        "status": "Confirmed",
+        "decision": "Thumbs up/down feedback in baseline, stored as metadata only.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D31",
+        "status": "Confirmed",
+        "decision": "Baseline suggests contacting the account manager (configurable text) when unresolved; full human handoff workflow is roadmap.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D32",
+        "status": "Confirmed",
+        "decision": "Industry packs (tyres/auto parts, paints/coatings, cement/building materials, plywood/wood panels, electrical) with seed-data generators in the repo, live switching via configuration with data coexisting, theme and terminology changes.",
+        "rationale": "Fast convincing client demos."
+      },
+      {
+        "id": "D33",
+        "status": "Confirmed",
+        "decision": "Orders visible: logged-in user's own orders only; unit-level access is roadmap with 'future scope' code comments.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D34",
+        "status": "Confirmed",
+        "decision": "Replenishment uses the individual user's history only; unit-level is roadmap with 'future scope' comments.",
+        "rationale": "Owner decision."
+      },
+      {
+        "id": "D35",
+        "status": "Confirmed",
+        "decision": "Quick Order, budget planner, substitution, natural-language order search, 'Why this?' panel, editable purchase list are baseline; photo search and voice are roadmap.",
+        "rationale": "Defaults accepted."
+      },
+      {
+        "id": "D36",
+        "status": "Confirmed",
+        "decision": "Full-response target <=10 seconds with progress shown; per-customer usage caps in baseline (configurable).",
+        "rationale": "Defaults accepted."
+      },
+      {
+        "id": "D37",
+        "status": "Confirmed",
+        "decision": "Coding conventions come from owner-validated sample code (patterns binding; sample names are placeholders). Mark future-scope extension points with comments.",
+        "rationale": "Owner statement: sample but correct."
+      }
+    ],
+    "decisions_that_must_not_change_without_product_owner_approval": [
+      "D01",
+      "D02",
+      "D03",
+      "D04",
+      "D05",
+      "D06",
+      "D07",
+      "D08",
+      "D09",
+      "D10",
+      "D11",
+      "D12",
+      "D13",
+      "D15",
+      "D16",
+      "D17",
+      "D18",
+      "D19",
+      "D20",
+      "D21",
+      "D22",
+      "D23",
+      "D24",
+      "D25",
+      "D26",
+      "D27",
+      "D28",
+      "D29",
+      "D30",
+      "D31",
+      "D32",
+      "D33",
+      "D34",
+      "D35",
+      "D36",
+      "D37"
+    ],
+    "next_stage_outputs_expected": "Research report with verified facts vs assumptions vs recommendations, alternatives and trade-offs, and a structured, self-contained handoff for the third conversation (architecture, technical design, Claude Code implementation prompt). The handoff must include this coding convention reference and the protected decisions."
+  },
+  "product_definition_note": "product_definition is the unmodified Stage 1 JSON minus 'document', 'how_to_use' and 'coding_convention_reference' (carried complete at top level).",
+  "evidence_ledger": [
+    {
+      "id": "E01",
+      "claim": "Gemini API unpaid services: submitted content and responses are used to improve Google products; human reviewers may read/annotate; Google says not to submit sensitive, confidential or personal information to unpaid services.",
+      "status": "Verified fact (primary source)",
+      "source": "https://ai.google.dev/terms (page version showing 'Effective March 23, 2026')",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E02",
+      "claim": "Gemini API is a Paid Service when used through a Cloud project with an active billing account; paid terms exclude prompts/responses from product improvement and apply the Data Processing Addendum.",
+      "status": "Verified fact (primary source)",
+      "source": "https://ai.google.dev/terms",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E03",
+      "claim": "Terms effective Sept 25, 2025 required Paid Services only when making API clients available to users in the EEA, Switzerland or the UK. Re-check the current wording before relying on it.",
+      "status": "Verified fact (primary source)",
+      "source": "https://ai.google.dev/gemini-api/terms-archive/terms_09_25_25",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E04",
+      "claim": "Gemini rate limits are per project (not per key) across RPM, TPM and RPD; RPD resets at midnight Pacific; limits vary by model and tier. Exact current free-tier numbers were NOT verified (third-party sources disagree).",
+      "status": "Verified fact (primary source) for structure; Not verified for numbers",
+      "source": "https://ai.google.dev/gemini-api/docs/rate-limits",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E05",
+      "claim": "OpenAI API: abuse-monitoring logs retained up to 30 days by default; Zero Data Retention / Modified Abuse Monitoring need prior OpenAI approval; Responses API keeps application state 30 days by default or when store=true.",
+      "status": "Verified fact (primary source)",
+      "source": "https://developers.openai.com/api/docs/guides/your-data",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E06",
+      "claim": "OpenAI API data is not used for training unless the customer opts in (policy since March 1, 2023).",
+      "status": "Secondary source only",
+      "source": "https://www.developersdigest.tech/models/data-retention/openai (quotes OpenAI); confirm on OpenAI enterprise privacy page",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E07",
+      "claim": "Anthropic API: privacy centre states inputs/outputs are deleted within 30 days unless otherwise agreed (e.g. ZDR). Commercial Terms bar training on customer content. CONFLICT: one third-party tracker claims 7-day retention since Sept 2025; unresolved, verify with Anthropic before quoting a figure to clients.",
+      "status": "Verified fact (primary source) (30-day statement); conflict unresolved",
+      "source": "https://privacy.claude.com/en/articles/7996866-is-my-data-used-for-model-training ; https://platform.claude.com/docs/en/manage-claude/api-and-data-retention",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E08",
+      "claim": "Schema-constrained output is available on all three providers: Gemini JSON Schema on all actively supported models (Nov 5, 2025); Anthropic structured outputs (GA) and strict tool use; OpenAI strict structured outputs and strict function calling.",
+      "status": "Verified fact (primary source)",
+      "source": "https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-structured-outputs/ ; https://platform.claude.com/docs/en/build-with-claude/structured-outputs ; https://developers.openai.com/api/docs/guides/structured-outputs",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E09",
+      "claim": "SAP Commerce Cloud framework update 2211-jdk21.1 (Sept 2025): JDK 21, Spring 6 (Jakarta EE namespace), OAuth rebuilt on current Spring libraries (Authorization Code flow required), Drools 10.",
+      "status": "Verified fact (primary source)",
+      "source": "https://learning.sap.com/courses/sap-commerce-cloud-developer/framework-updates ; https://userapps.support.sap.com/sap/support/knowledge/en/3658618",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E10",
+      "claim": "Composable Storefront versioning aligned with Commerce Cloud from 2211.19; 2211.19-32 = Angular 17 / Node 20; 2211.36-43 and 221121.x = Angular 19 / Node 22 only; update releases are supported for 6 months. Newer releases after these were NOT checked.",
+      "status": "Verified fact (primary source) for the listed releases",
+      "source": "https://userapps.support.sap.com/sap/support/knowledge/en/3363029 ; https://github.com/SAP/spartacus",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E11",
+      "claim": "Since 2211, OCC customisation is done through an OCC extension generated from the yocc template (name ends with 'occ'); its web Spring config is imported into the commercewebservices web context.",
+      "status": "Secondary source only",
+      "source": "https://gist.github.com/sperez2-seidor/327f5db98d2d8368e3bb099e6a800929 ; SAP Learning 'Customizing Commerce Web Services' (confirms yocc template)",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E12",
+      "claim": "Community reports that DataMapper/field-level mapping can misbehave when used from a custom OCC extension (fields filter ignored). Needs a spike.",
+      "status": "Secondary source only",
+      "source": "https://community.sap.com/t5/crm-and-cx-q-a/how-to-override-data-mapper-object-from-commercewebservices-extension/qaq-p/12731204",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E13",
+      "claim": "Spring MVC supports streaming via ResponseBodyEmitter / SseEmitter (SSE formatted per W3C spec) with explicit timeouts and async dispatch.",
+      "status": "Verified fact (primary source)",
+      "source": "https://docs.spring.io/spring-framework/reference/6.2/web/webmvc/mvc-ann-async.html",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E14",
+      "claim": "Reverse proxies / gateways commonly buffer or time out SSE unless configured. NO SAP document was found stating how CCv2 ingress/CDN/API nodes treat SSE or chunked responses. This is a GAP.",
+      "status": "Not verified",
+      "source": "General evidence: https://learn.microsoft.com/azure/api-management/how-to-server-sent-events ; https://answers.sap.com/t5/technology-q-a/using-sap-approuter-with-server-sent-events/qaq-p/13634472",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E15",
+      "claim": "Angular HttpClient offers withFetch() (stable) and download progress events with partialText for text responses; native EventSource cannot set Authorization headers, so POST + fetch streaming is needed for bearer-token auth.",
+      "status": "Verified fact (primary source) (Angular API docs); EventSource header limitation is general web-platform knowledge",
+      "source": "https://v21.angular.dev/api/common/http/withFetch ; https://v19.angular.dev/api/common/http/HttpDownloadProgressEvent",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E16",
+      "claim": "OWASP Top 10 for LLM Applications 2025: LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM05 Improper Output Handling, LLM06 Excessive Agency, LLM07 System Prompt Leakage, LLM09 Misinformation, LLM10 Unbounded Consumption.",
+      "status": "Secondary source only",
+      "source": "https://invicti.com/blog/web-security/owasp-top-10-risks-llm-security-2025 ; https://www.hackerone.com/ai/owasp-top-10-llms-2025 (primary OWASP document not fetched)",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E17",
+      "claim": "ImpEx essential/project data load by naming convention (essentialdata*.impex, projectdata*.impex) or by code via @SystemSetup hooks; update.importEssentialData.enabled affects ESSENTIAL/UPDATE only.",
+      "status": "Secondary source only / SAP KBA 3632547 preview",
+      "source": "https://userapps.support.sap.com/sap/support/knowledge/en/3632547 ; https://github.com/nanavinay/hybris",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E18",
+      "claim": "Backoffice configuration is done per extension in *-backoffice-config.xml contexts (editor-area, list-view, simple/advanced search, create-wizard) for custom item types defined in items.xml.",
+      "status": "Secondary source only",
+      "source": "https://learning.sap.com/courses/exploring-the-technical-essentials-of-sap-commerce-cloud/application-custom-backoffice-extension_bd563c89-3e7c-431c-a09a-2c32371554bd ; https://sapcommercecloudsimplified.blogspot.com/2024/12/backoffice-customizations-in-sap.html",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E19",
+      "claim": "Single-site-with-pack-categories vs one-base-site-per-pack modelling: no authoritative SAP page was confirmed in this session. Treated as ASSUMPTION based on established SAP Commerce practice; spike S5 required.",
+      "status": "Not verified",
+      "source": "n/a",
+      "as_of": "2026-11-13"
+    },
+    {
+      "id": "E20",
+      "claim": "Composable storefront core aims to meet at least 90% of accessibility requirements (SAP Learning). The UC1 chat route must be accessibility-tested separately.",
+      "status": "Verified fact (primary source) (SAP Learning snippet)",
+      "source": "https://learning.sap.com/courses/sap-commerce-cloud-developer/composable-storefront-updates",
+      "as_of": "2026-11-13"
+    }
+  ],
+  "feasibility_assessment": {
+    "legend": {
+      "feasible_as_specified": "Build as written",
+      "feasible_with_change": "Build with the stated change or owner approval",
+      "not_recommended": "None of the 43 capabilities is rejected outright; not-recommended elements are listed below"
+    },
+    "items": [
+      {
+        "id": "CF-01",
+        "name": "Full-page conversational experience",
+        "verdict": "feasible_with_change",
+        "reason": "Streaming/step events are not an OOTB OCC pattern. Use a custom OCC-extension endpoint returning SSE over POST (fetch-based Angular client, bearer token) plus a non-streaming fallback. CCv2 ingress/CDN buffering is unverified (spike S1). Mark the route client-side-rendered only."
+      },
+      {
+        "id": "CF-02",
+        "name": "Intent understanding and clarification",
+        "verdict": "feasible_as_specified",
+        "reason": "One schema-constrained decision call (intent, confidence, parameters, proposed next step), validated by backend against catalogue and enabled capabilities. Can be merged with translate-in to save a call."
+      },
+      {
+        "id": "CF-03",
+        "name": "Rich response components",
+        "verdict": "feasible_as_specified",
+        "reason": "IDs-only contract; backend hydrates and applies a provenance check (every ID must have appeared in this turn's tool results and pass permission checks). Components are presentational Angular."
+      },
+      {
+        "id": "CF-04",
+        "name": "Session-only conversation context",
+        "verdict": "feasible_as_specified",
+        "reason": "Hold context in browser sessionStorage; backend stays stateless and re-validates and sanitises at egress on every call; clear on logout event. Client-supplied context is untrusted input."
+      },
+      {
+        "id": "CF-05",
+        "name": "Multilingual conversation",
+        "verdict": "feasible_with_change",
+        "reason": "Feasible, but serial detect+translate+classify+compose+translate-out threatens the 10s target. Merge detect/translate/classify into one call, keep static UI labels in Spartacus i18n, protect identifiers with placeholders. Free-tier Gemini only for synthetic demo data (E01); paid terms needed for client data and likely for EEA/UK/CH (E03). Optional compose-in-language variant would touch D17 (needs owner approval)."
+      },
+      {
+        "id": "CF-06",
+        "name": "Off-topic redirect, honest limits, contact fallback",
+        "verdict": "feasible_as_specified",
+        "reason": "Intent routing plus configurable fallback text; add deterministic guardrail list so over-refusal can be tuned."
+      },
+      {
+        "id": "CF-07",
+        "name": "Thumbs up/down feedback",
+        "verdict": "feasible_as_specified",
+        "reason": "Separate Feedback item type, no free text, keyed by responseId and audit reference."
+      },
+      {
+        "id": "CF-08",
+        "name": "'Why this?' transparency panel",
+        "verdict": "feasible_as_specified",
+        "reason": "Trace must be a whitelisted DTO built from tool metadata (sources, windows, thresholds), never from ranking weights, margin, prompts or model text. Template-first explanations; LLM phrasing optional to save latency."
+      },
+      {
+        "id": "PD-01",
+        "name": "Natural-language product search",
+        "verdict": "feasible_as_specified",
+        "reason": "Backend maps extracted keywords/filters onto a whitelist of configured attributes using parameterised FlexibleSearch (convention-compliant). Large catalogues need an optional Solr candidate provider behind the same SPI. Relevance judging sends product text only, never price or margin."
+      },
+      {
+        "id": "PD-02",
+        "name": "Guided discovery, categories and filters",
+        "verdict": "feasible_as_specified",
+        "reason": "Category tree plus facet counts through the same candidate-provider SPI; facets per pack from pack attribute mapping."
+      },
+      {
+        "id": "PD-03",
+        "name": "Product Q&A from catalogue data",
+        "verdict": "feasible_as_specified",
+        "reason": "getProductDetails returns an approved-field DTO; answer must cite fields; missing data is stated."
+      },
+      {
+        "id": "PD-04",
+        "name": "Attribute-based product comparison",
+        "verdict": "feasible_as_specified",
+        "reason": "Deterministic comparison table from configured comparison attributes; AI text validated against table values."
+      },
+      {
+        "id": "PD-05",
+        "name": "Compatibility via configurable attribute",
+        "verdict": "feasible_as_specified",
+        "reason": "Deterministic compatibility check on the configured attribute; unverifiable cases return 'cannot verify'."
+      },
+      {
+        "id": "PD-06",
+        "name": "Alternatives, similar products and substitution",
+        "verdict": "feasible_as_specified",
+        "reason": "Deterministic similarity (same category + attribute proximity rules); stock via placeholder hook (D27)."
+      },
+      {
+        "id": "PD-07",
+        "name": "Budget-based discovery",
+        "verdict": "feasible_as_specified",
+        "reason": "Backend evaluates customer-specific price eligibility and returns approved IDs only. Cap candidate set before price lookups for performance. Budget stated by the dealer in chat is user input, not backend price data."
+      },
+      {
+        "id": "PA-01",
+        "name": "Product cards with Add to Cart (placeholder list)",
+        "verdict": "feasible_with_change",
+        "reason": "Spec says backend 'maintains' the placeholder list but D07 forbids server-side persistence. Keep the list in browser sessionStorage; backend validates, prices and checks it on each call. Clearly label as demo list."
+      },
+      {
+        "id": "PA-02",
+        "name": "Editable session purchase list",
+        "verdict": "feasible_as_specified",
+        "reason": "Client-held list survives refresh in tab session; edits validated by backend before any AI use."
+      },
+      {
+        "id": "PA-03",
+        "name": "Quick Order from typed or pasted list",
+        "verdict": "feasible_as_specified",
+        "reason": "Deterministic grammar/regex first pass; LLM only for residual messy lines; every line validated by backend (code, alias, normalised code, description search, clarification)."
+      },
+      {
+        "id": "PA-04",
+        "name": "Budget purchase planner",
+        "verdict": "feasible_as_specified",
+        "reason": "Java allocation (bounded knapsack in minor units / priority greedy) with totals computed in backend; exclusions explained."
+      },
+      {
+        "id": "PA-05",
+        "name": "Quantity recommendations",
+        "verdict": "feasible_as_specified",
+        "reason": "Median/recent-mean quantity from the user's history; labelled as estimate."
+      },
+      {
+        "id": "PA-06",
+        "name": "Basket optimisation",
+        "verdict": "feasible_as_specified",
+        "reason": "Deterministic checks over list, history and pending orders; each flag carries its data trace."
+      },
+      {
+        "id": "PA-07",
+        "name": "Reorder from a previous order",
+        "verdict": "feasible_as_specified",
+        "reason": "Order lookup scoped to the logged-in customer through standard customer-account order retrieval; availability and substitution via PD-06."
+      },
+      {
+        "id": "OM-01",
+        "name": "Order retrieval, status and tracking (Commerce-held data)",
+        "verdict": "feasible_as_specified",
+        "reason": "Customer-scoped lookups of order, consignment and delivery data held in Commerce. Customer is bound from the security context, never from AI output."
+      },
+      {
+        "id": "OM-02",
+        "name": "Natural-language order search",
+        "verdict": "feasible_as_specified",
+        "reason": "Validated filter contract (date range, status, amount with currency) executed by parameterised queries following the supplied DAO convention."
+      },
+      {
+        "id": "OM-03",
+        "name": "Order summaries and order FAQs",
+        "verdict": "feasible_as_specified",
+        "reason": "Summaries generated from backend DTO; FAQ from KN-01; numeric slots filled by backend."
+      },
+      {
+        "id": "RI-01",
+        "name": "Rule-based replenishment detection",
+        "verdict": "feasible_as_specified",
+        "reason": "Per-user, per-product median inter-order gap and typical quantity with minimum-order threshold; due/overdue flags; configurable window."
+      },
+      {
+        "id": "RI-02",
+        "name": "Pending-order awareness",
+        "verdict": "feasible_as_specified",
+        "reason": "Open-order statuses configurable; quantities netted from suggestions."
+      },
+      {
+        "id": "RI-03",
+        "name": "Proactive welcome panel",
+        "verdict": "feasible_as_specified",
+        "reason": "Compute deterministically on page open; framing text template-first with optional cached LLM phrasing so welcome panel does not wait on a model."
+      },
+      {
+        "id": "RI-04",
+        "name": "Purchase-pattern change detection",
+        "verdict": "feasible_as_specified",
+        "reason": "Trailing-mean vs recent-orders comparison with minimum sample and percentage threshold; observation text states numbers and no causes."
+      },
+      {
+        "id": "RI-05",
+        "name": "Suggested repeat-order list",
+        "verdict": "feasible_as_specified",
+        "reason": "Assembles RI-01/RI-02 output into the client-held purchase list; customer approves each addition."
+      },
+      {
+        "id": "CI-01",
+        "name": "Cross-sell and complementary products",
+        "verdict": "feasible_as_specified",
+        "reason": "Co-purchase counts (support/confidence) plus category rules, computed on demand with caching at demo scale; precompute job is an extension point for large order volumes."
+      },
+      {
+        "id": "CI-02",
+        "name": "Bundle suggestions",
+        "verdict": "feasible_as_specified",
+        "reason": "Bundles derived from CI-01 patterns and rules; suppress when data is sparse."
+      },
+      {
+        "id": "CI-03",
+        "name": "Business recommendation controls",
+        "verdict": "feasible_as_specified",
+        "reason": "Store priority/margin in a separate UC1 item type referencing the product (not an extra ProductModel attribute); ranker consumes it in Java after the LLM stage; trace builder whitelists fields so it can never leak."
+      },
+      {
+        "id": "CI-04",
+        "name": "Customer-linked interest events",
+        "verdict": "feasible_with_change",
+        "reason": "CI-04 says the AI classifies events. Recommend AI may only suggest an enumerated event type; backend decides and writes. 'Requested-but-not-found' must store a normalised category/attribute token, not free text. Enabled-by-default consent needs per-market legal review (D08 unchanged)."
+      },
+      {
+        "id": "KN-01",
+        "name": "Approved FAQ and policy content",
+        "verdict": "feasible_as_specified",
+        "reason": "Small approved corpus per pack: lexical retrieval, LLM selects entry IDs only, backend returns the approved text; no vector store in baseline."
+      },
+      {
+        "id": "PL-01",
+        "name": "Backoffice runtime configuration",
+        "verdict": "feasible_with_change",
+        "reason": "Feasible with custom Configuration items plus layered defaults. D13 says every capability is toggleable, but toggling PL-01, PL-03, PL-04 or PL-05 off conflicts with security requirements. Recommend fail-closed semantics (disabling sanitisation blocks external model calls). Needs owner approval because D13 is protected."
+      },
+      {
+        "id": "PL-02",
+        "name": "Per-task multi-provider model routing",
+        "verdict": "feasible_as_specified",
+        "reason": "Own thin provider adapters over java.net.http.HttpClient + Jackson (matches supplied convention, avoids vendor SDK classpath conflicts); keys by alias from secure properties."
+      },
+      {
+        "id": "PL-03",
+        "name": "Sanitisation layer",
+        "verdict": "feasible_with_change",
+        "reason": "Guarantee holds for backend-supplied data; user-typed free text can only be masked best-effort. Reword acceptance criterion accordingly and warn users not to type personal data."
+      },
+      {
+        "id": "PL-04",
+        "name": "Tool catalogue and controlled orchestrator",
+        "verdict": "feasible_as_specified",
+        "reason": "Own lightweight plan-validate-execute orchestrator with workflow templates per intent, bounded LLM branching, parallel independent tools and hard step/time limits."
+      },
+      {
+        "id": "PL-05",
+        "name": "Audit and observability",
+        "verdict": "feasible_as_specified",
+        "reason": "Structured audit events through a dedicated logger (metadata only); optional DB-backed audit item as an extension point. Retention then follows the log platform."
+      },
+      {
+        "id": "PL-06",
+        "name": "Per-customer usage caps",
+        "verdict": "feasible_as_specified",
+        "reason": "DB-backed counter per customer per period (multi-node safe), written in batches; graceful message at cap."
+      },
+      {
+        "id": "PL-07",
+        "name": "Industry packs",
+        "verdict": "feasible_with_change",
+        "reason": "Single base site and store; packs separated by root categories, pack config item and pack dealers. 'Live' switch = config change applied after short cache TTL plus page reload (SC-10 already says reload). Dealer identity per pack is an owner decision."
+      },
+      {
+        "id": "PL-08",
+        "name": "Extension points",
+        "verdict": "feasible_as_specified",
+        "reason": "Spring-registered SPIs (Tool, Agent, Workflow, Rule, Gateway) discovered by bean type; core code unchanged when a client adds a tool."
+      }
+    ],
+    "not_recommended_elements": [
+      "Using free-tier Gemini for any real client or dealer data",
+      "Letting the AI classify and write interest events directly (CI-04)",
+      "Streaming unvalidated model text to the user",
+      "Executing or constructing queries from model output (already excluded)",
+      "Storing margin/priority as a ProductModel or classification attribute"
+    ]
+  },
+  "recommended_approach_by_area": {
+    "sap_commerce": {
+      "extension_pattern": "OCC extension from yocc template for endpoints; separate core/facades/backoffice/sampledata extensions; follow Controller -> Facade -> Service -> DAO with the supplied naming (interfaces + Default* implementations, *Data and *WsDTO beans in XML, @Resource injection).",
+      "data_access": "Parameterised FlexibleSearch constants per supplied DAO convention for orders, history and candidate search; PagedFlexibleSearchService for paged order search; customer always passed into DAO and filtered in the query. Optional Solr adapter for large catalogues behind a candidate-provider SPI.",
+      "model_reuse": "Product, Order/OrderEntry, Consignment, B2BCustomer, Category, classification features for industry attributes. Custom types only the six in answer 5.",
+      "configuration": "Layered: project.properties safe defaults -> local.properties/env/Cloud secrets -> Backoffice items (non-secret) -> service with short-TTL cache invalidated on save. Backoffice screens via *-backoffice-config.xml.",
+      "packs_and_seed": "Generators (script + manifest per pack) emit deterministic ImpEx; loaded by @SystemSetup hooks with per-pack options; order dates generated relative to load time so rhythms (e.g. 30-day) stay current.",
+      "alternatives_considered": [
+        "Standalone web app (own security, high coupling)",
+        "Overriding OOTB OCC controllers (upgrade risk)"
+      ]
+    },
+    "frontend": {
+      "route": "Auth-guarded Angular route delivered as a lazy-loaded Spartacus feature library, CSR only; CMS-driven page variant optional later (SmartEdit).",
+      "streaming": "Fetch-based POST stream reader with Spartacus token; step indicators and text in ARIA live regions; reduced-motion respected.",
+      "theming": "Pack theme tokens (CSS custom properties) from config endpoint, scoped to the chat container.",
+      "components": "Presentational components per block type; media via Spartacus media component; static labels via Spartacus i18n.",
+      "version_note": "Verified: 2211.36-43 is Angular 19 / Node 22 (E10). Owner's actual version is unknown.",
+      "accessibility": "Target WCAG 2.1 AA for the route; core storefront alone claims about 90% coverage (E20)."
+    },
+    "ai_orchestration": {
+      "pattern": "Hybrid: intent -> workflow template (deterministic pipelines for the ten scenarios) with bounded LLM-proposed branching among allowed tools; 'agents' are role-specific prompts (decision, relevance, composer, translator) run through one provider abstraction.",
+      "provider_abstraction": "Own thin REST adapters; provider-neutral schema-constrained 'decision' and 'composition' calls instead of provider-specific tool loops (E08).",
+      "routing": "Per-task config: small fast model for translate/classify, mid model for relevance and composition; fallback chain; timeouts and retries from config; token counters.",
+      "grounding": "Evidence packs only; closed-world prompts; ID provenance check; numeric slots filled by backend; compare AI text with table values; unknown -> say so.",
+      "multilingual": "Merged detect+translate+classify; identifier placeholders (codes, order numbers, brands); translate-out only for dynamic prose; static labels via i18n.",
+      "memory": "Client-held, bounded, sanitised at egress."
+    },
+    "data_intelligence": {
+      "search": "Whitelisted attributes from pack mapping; classification-system features for industry attributes; FlexibleSearch default, Solr optional.",
+      "recommendations": "Co-occurrence (support/confidence), category rules, business ranker applied last.",
+      "replenishment": "Median inter-order gap per product (minimum orders), last/median quantity, due = last order + gap, overdue ratio; pending orders netted.",
+      "pattern_change": "Recent N orders vs trailing mean, percentage threshold, minimum sample; no causal claims.",
+      "budget": "Bounded knapsack in minor currency units; explain exclusions.",
+      "quick_order": "Grammar first, LLM for leftovers, backend validation ladder.",
+      "faq": "Lexical retrieval over approved entries; LLM returns entry IDs only."
+    },
+    "security_governance": {
+      "isolation": "Bind customer from security context; ignore or reject userId mismatch; supplied sample allows ROLE_TRUSTED_CLIENT and ROLE_CUSTOMERMANAGERGROUP on /users/{userId}: confirm intended roles (owner).",
+      "prompt_injection": "Privilege separation: any model call that reads untrusted text (product text, FAQ, order notes, user text) has no tool authority and outputs only IDs/enums; delimit untrusted content; strip instruction-like patterns; validate outputs (OWASP LLM01/05/06).",
+      "sanitisation": "Field classification, masking, request-scoped token maps, re-check outbound payload against allow-list; free text best-effort.",
+      "keys": "Keys only in local.properties (gitignored), environment or Cloud secrets; Backoffice holds aliases; add secret scanning and push protection in the public repo.",
+      "audit": "Metadata-only structured events per PL-05, no prompts or personal data.",
+      "limits": "Step caps, time caps, per-customer caps, input length caps (OWASP LLM10)."
+    },
+    "operations": {
+      "reliability": "Timeouts, bounded retries for idempotent calls, circuit breaker, fallback model chain, partial-result responses with honest notice.",
+      "testing": "Unit tests for deterministic tools; recorded-fixture provider contract tests; golden-set intent and multilingual evals; injection corpus; isolation tests (SC-06); Angular unit and e2e; load test with fake provider. Owner has not supplied test examples.",
+      "deployment": "CCv2 extension packaging; separate storefront build with matching Node/Angular; gate release on spikes S1-S8.",
+      "cost": "Per-task routing, context trimming, caching of welcome panel and translations of static text, usage caps."
+    }
+  },
+  "answers_to_specific_questions": [
+    {
+      "q": 1,
+      "question": "Where should session context live?",
+      "recommendation": "Browser sessionStorage (tab-scoped), sent as a bounded context envelope with each request; backend stays stateless. Sanitise at egress on every model call; token maps are request-scoped and discarded. Clear on Spartacus logout event.",
+      "alternatives": [
+        "Server-side short-lived cache keyed by session (better token control and tamper resistance, but needs sticky or shared cache on multi-node CCv2 and risks contradicting 'no transcript stored server-side')"
+      ],
+      "label": "Recommendation (assumption: sessionStorage semantics to be confirmed in spike S1)",
+      "touches_protected": "D07 consistent"
+    },
+    {
+      "q": 2,
+      "question": "How to transport streaming and step progress through OCC and render in Spartacus?",
+      "recommendation": "Custom OCC extension endpoint (POST, text/event-stream) built on Spring ResponseBodyEmitter/SseEmitter with heartbeat and explicit timeout. Events: step_started, step_completed, block, text_delta, done, error. Angular client uses fetch streaming with the Spartacus bearer token (EventSource cannot send Authorization). Validate-then-reveal: backend validates and hydrates composed output before streaming text, so users never see unvalidated claims. Non-streaming fallback: the sample-style POST /chat returning one WsDTO.",
+      "alternatives": [
+        "NDJSON over POST (simpler parsing, same buffering risk)",
+        "Polling: POST creates a run, GET events (works through any proxy, higher latency)",
+        "WebSocket (new infrastructure, auth complexity)"
+      ],
+      "label": "Recommendation; CCv2 behaviour is a GAP (E14), spike S1 mandatory",
+      "touches_protected": "D29 satisfied (live steps + animated streamed answer)"
+    },
+    {
+      "q": 3,
+      "question": "How to model industry packs so data coexists and the experience switches live?",
+      "recommendation": "One base site and base store; one product catalog (or catalogs on the same store) with a root category per pack; pack = Configuration/ConfigEntry item holding root categories, attribute mappings, terminology, sample prompts, theme tokens; per-pack demo dealers plus one all-packs demo dealer; every tool scopes by the active pack resolved in backend. Switch = change active pack config, cache TTL, reload.",
+      "alternatives": [
+        "One base site per pack (hard isolation but five storefront contexts, no single live switch)",
+        "Separate catalogs per pack on one store (cleaner scoping, more ImpEx and sync work)"
+      ],
+      "label": "Assumption (E19), spike S5",
+      "touches_protected": "D32 consistent; dealer identity needs owner input"
+    },
+    {
+      "q": 4,
+      "question": "Current data-use/retention terms and compatibility with privacy-first positioning?",
+      "recommendation": "Free-tier Gemini: content used to improve Google products and may be human-reviewed (E01) -> acceptable only for synthetic demo data, NOT for client guidance. Paid Gemini (billing-enabled project): not used for improvement (E02). OpenAI API: no training by default (secondary E06), abuse logs up to 30 days, ZDR by approval, set store=false (E05). Anthropic API: no training, deletion within 30 days with ZDR by arrangement; a 7-day claim conflicts (E07). Add a configuration guard: provider tier flag plus a 'synthetic data only' mode that refuses free-tier providers outside demo sites.",
+      "alternatives": [],
+      "label": "Verified (see evidence ledger) + Recommendation",
+      "touches_protected": "D18 (demo uses free Gemini) stays valid for synthetic data; guard needs owner approval"
+    },
+    {
+      "q": 5,
+      "question": "Which custom item types are minimally needed; can events and feedback share one?",
+      "recommendation": "Minimum six: UC1Configuration, UC1ConfigEntry (typed by enum: toggle, threshold, prompt, terminology, provider route, pack, FAQ), UC1InterestEvent, UC1Feedback, UC1ProductBusinessAttribute, UC1UsageCounter. Audit via structured logs (optional item later). Events and feedback should NOT share a table: D08 requires a dedicated interest-event table and the two have different privacy lifecycles (customer-linked 90-day retention vs anonymous metadata). Share a Java base class and purge service instead. A shared type with discriminator is possible but needs owner approval.",
+      "alternatives": [
+        "Dedicated UC1IndustryPack and UC1FaqEntry types (stronger typing, +2 types)",
+        "Single UC1Signal type with discriminator (fewer types; conflicts with D08 wording)"
+      ],
+      "label": "Recommendation",
+      "touches_protected": "D08"
+    },
+    {
+      "q": 6,
+      "question": "Where should the business priority/margin attribute live?",
+      "recommendation": "Separate item type UC1ProductBusinessAttribute referencing the product (restricted Backoffice permission group). Avoid ProductModel extension (alters client's items.xml, breaks drop-in) and avoid classification features (exported to feeds/Solr, high leak risk). Ranking runs in Java after the LLM stage; trace and prompt builders use whitelisted DTOs that cannot carry the field.",
+      "alternatives": [
+        "ProductModel attribute (simplest, couples to client type system)"
+      ],
+      "label": "Recommendation",
+      "touches_protected": "D24 consistent"
+    },
+    {
+      "q": 7,
+      "question": "Latency budget for <=10s with translation and multi-step chains?",
+      "recommendation": "Indicative budget (ASSUMPTION, to be measured in spike S4): auth+transport 0.1s; merged detect+translate+classify 0.8-1.5s; deterministic tools in parallel 0.3-1.0s; relevance/explanation 1.0-2.5s; composition (structured) 1.2-3.0s; translate-out 0.8-1.5s; validation/hydration 0.2-0.4s. Typical total 5-10s; worst case exceeds 10s. Levers: merge calls, small fast models for classify/translate, parallel independent tools (history, pending orders, complementary), template-first explanations, cache welcome panel, static labels via i18n, cap candidates. Free-tier quotas make the target unreliable.",
+      "alternatives": [
+        "Compose directly in the dealer's language (removes translate-out; touches D17, needs approval)"
+      ],
+      "label": "Assumption; no benchmark run in this session",
+      "touches_protected": "D36, D17"
+    },
+    {
+      "q": 8,
+      "question": "Recommended structured response contract AI/backend/front end?",
+      "recommendation": "Conceptual only. (1) Model->backend 'decision' object: schemaVersion, intent{name,confidence}, parameters, nextStep{type: tool|clarify|respond, toolName, args}, never prices or free-form facts. (2) Model composition: ordered blocks with text containing numeric slot references and productCodes/orderCodes only. (3) Backend->frontend 'response': responseId, language, blocks[] typed (text, productCards, comparison, orderSummary, purchaseList, recommendationList, welcome, clarification, notice), hydrated data, explanation reference, feedback handle, suggested next actions. (4) Stream events wrap the same blocks. Backend rejects IDs not present in this turn's tool results (provenance check) and fills digits via slots so the model cannot invent totals.",
+      "alternatives": [
+        "Provider-native multi-turn tool loops (less portable across Gemini/Anthropic/OpenAI)"
+      ],
+      "label": "Recommendation",
+      "touches_protected": "D26 consistent"
+    },
+    {
+      "q": 9,
+      "question": "How to minimise coupling with client-specific facade/core layers?",
+      "recommendation": "Split into extensions: uc1core (types, services, DAO, orchestrator, SPIs), uc1facades, uc1occ (yocc template), uc1backoffice, uc1sampledata (packs + generators), plus a lazy-loaded Spartacus feature library. Core talks to the client's platform through gateway SPIs (catalog, price, order, customer, stock, cart) with default implementations over OOTB services; clients override by bean alias. No client-specific models in repo. Platform version (javax vs jakarta) must be confirmed.",
+      "alternatives": [],
+      "label": "Recommendation",
+      "touches_protected": "D01, D37"
+    }
+  ],
+  "decisions_needing_owner_approval": [
+    {
+      "id": "A1",
+      "decision": "Fail-closed toggle semantics for PL-01/PL-03/PL-04/PL-05 (disabling sanitisation blocks external calls; others require confirmation).",
+      "touches": "D13 (protected)",
+      "default": "Adopt recommendation."
+    },
+    {
+      "id": "A2",
+      "decision": "Guard against free-tier Gemini outside synthetic demo sites ('synthetic data only' mode).",
+      "touches": "D18 (protected)",
+      "default": "Adopt; demo behaviour unchanged."
+    },
+    {
+      "id": "A3",
+      "decision": "Optional compose-in-language latency variant (skips translate-out).",
+      "touches": "D17 (protected)",
+      "default": "Do not adopt unless measurements show the 10s target cannot be met."
+    },
+    {
+      "id": "A4",
+      "decision": "Dealer identity per pack: pack-specific demo dealers plus one all-packs dealer.",
+      "touches": "D32",
+      "default": "Adopt recommendation."
+    },
+    {
+      "id": "A5",
+      "decision": "Role list on chat endpoint and strict userId binding.",
+      "touches": "D37 convention detail",
+      "default": "ROLE_CUSTOMERGROUP only plus binding; owner to confirm."
+    },
+    {
+      "id": "A6",
+      "decision": "Neutral package/bean prefix for the public repo (fpp/Cpp are placeholders).",
+      "touches": "D37",
+      "default": "Owner to name the prefix."
+    },
+    {
+      "id": "A7",
+      "decision": "Events and feedback as two item types with dedicated tables (not one shared type).",
+      "touches": "D08",
+      "default": "Two types."
+    },
+    {
+      "id": "A8",
+      "decision": "Interest-event notice wording and consent approach per market, with legal review.",
+      "touches": "D08, open question",
+      "default": "Owner supplies wording; design provides configurable text."
+    },
+    {
+      "id": "A9",
+      "decision": "CI-04 AI may only suggest enumerated event types; backend decides.",
+      "touches": "CI-04, D08a (proposed)",
+      "default": "Adopt."
+    },
+    {
+      "id": "A10",
+      "decision": "Priority/margin attribute as separate item type.",
+      "touches": "D24",
+      "default": "Adopt."
+    },
+    {
+      "id": "A11",
+      "decision": "Client-held purchase list and context (PA-01/CF-04) with backend validation only.",
+      "touches": "D03, D07",
+      "default": "Adopt."
+    },
+    {
+      "id": "A12",
+      "decision": "Platform and storefront versions (SAP Commerce, Spartacus, Angular, Node, javax vs jakarta).",
+      "touches": "Constraints",
+      "default": "Needed before design freeze."
+    },
+    {
+      "id": "A13",
+      "decision": "Validate-then-reveal streaming (stream text after backend validation).",
+      "touches": "D29 (satisfied)",
+      "default": "Adopt; revisit if time-to-first-text is too slow."
+    },
+    {
+      "id": "A14",
+      "decision": "Audit storage: structured logs in baseline, DB audit item as extension.",
+      "touches": "PL-05",
+      "default": "Adopt."
+    }
+  ],
+  "convention_conflicts_and_gaps": [
+    "Streaming (CF-01) vs the sample controller that returns one mapped WsDTO: needs a second endpoint style or event DTOs mapped one by one.",
+    "Sample @Secured includes ROLE_TRUSTED_CLIENT and ROLE_CUSTOMERMANAGERGROUP on /users/{userId}: can act for other users, conflicting with D33/D34 own-data-only unless the userId is bound.",
+    "PA-01 'backend maintains placeholder list' vs D07 no server-side persistence.",
+    "CI-04 'AI classifies events' vs D08a backend-written structured events.",
+    "D13 'every capability toggleable' vs security-critical capabilities (PL-01/03/04/05).",
+    "PL-03 'sensitive fields never appear' cannot be guaranteed for free text typed by the user.",
+    "SC-10 'reload page' vs PL-07 'reconfigures live'.",
+    "D08 'dedicated table' vs sharing one table with feedback.",
+    "Sample uses javax-style @Resource; platform 2211-jdk21.x uses Jakarta (E09): confirm owner's version.",
+    "Sample uses @Operation/@Parameter (OpenAPI annotations), which suggests a recent 2205+/2211 platform (inference, not verified).",
+    "No controller exception-handling, Spring XML, items.xml, populator, test or Angular examples were supplied."
+  ],
+  "examples_needed_from_owner": [
+    "Controller-level exception handling / error response convention",
+    "Spring bean XML for service, DAO, facade and OCC web config",
+    "items.xml sample and Backoffice config sample",
+    "Populator/converter sample",
+    "Unit and integration test samples",
+    "Angular/Spartacus component, module, service, SCSS samples and lint rules",
+    "Javadoc/comment style and Allman brace rules confirmation",
+    "Platform, Spartacus, Angular, Node versions; javax vs jakarta",
+    "Intended meaning of fpp vs Cpp prefixes and the public-repo prefix"
+  ],
+  "spikes_required_before_design_freeze": [
+    {
+      "id": "S1",
+      "name": "Streaming path",
+      "goal": "Prove SSE-over-POST from a yocc OCC extension to a Spartacus fetch client on CCv2 (or equivalent ingress/CDN): buffering, idle timeout, heartbeat, auth, SSR exclusion; fall back to NDJSON or polling if it fails."
+    },
+    {
+      "id": "S2",
+      "name": "DataMapper in custom OCC extension",
+      "goal": "Confirm getDataMapper() with fields works for chat DTOs and per-event payloads (E12)."
+    },
+    {
+      "id": "S3",
+      "name": "Provider adapters",
+      "goal": "Implement schema-constrained decision call on Gemini, OpenAI, Anthropic via HttpClient; compare reliability and latency; confirm current model names and limits."
+    },
+    {
+      "id": "S4",
+      "name": "Latency",
+      "goal": "Measure SC-01 and SC-09 end-to-end, with and without merged calls; derive real budget."
+    },
+    {
+      "id": "S5",
+      "name": "Pack coexistence",
+      "goal": "Validate single site/store + pack root categories, pack dealers, relative-date ImpEx, config switch and cache TTL."
+    },
+    {
+      "id": "S6",
+      "name": "Search scale",
+      "goal": "FlexibleSearch vs Solr on a 50k+ product set with classification attributes."
+    },
+    {
+      "id": "S7",
+      "name": "Isolation",
+      "goal": "Automated cross-customer tests for every customer-scoped tool and the userId binding."
+    },
+    {
+      "id": "S8",
+      "name": "Translation safety",
+      "goal": "Identifier survival and nuance across Hindi and other target languages with placeholders."
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Streaming blocked or buffered by CCv2 ingress/CDN (E14)",
+      "mitigation": "Spike S1; polling fallback; heartbeat; non-stream endpoint"
+    },
+    {
+      "risk": "10s target missed with translation and free-tier quotas",
+      "mitigation": "Merge calls, fast models, parallel tools, paid tier for demos that matter"
+    },
+    {
+      "risk": "Free-tier data use contradicts privacy positioning for real data",
+      "mitigation": "Synthetic-data-only guard; client guidance to use paid/ZDR terms"
+    },
+    {
+      "risk": "Cross-customer leakage via userId or tool args",
+      "mitigation": "Bind user from security context; DAO customer filter; S7 tests"
+    },
+    {
+      "risk": "Hallucinated IDs and numbers",
+      "mitigation": "Provenance check; numeric slots; table-vs-text validation"
+    },
+    {
+      "risk": "Margin leakage",
+      "mitigation": "Separate type, ranker after LLM, whitelisted DTOs, restricted Backoffice group"
+    },
+    {
+      "risk": "Spartacus/Angular upgrade cadence (6-month support, annual Angular major)",
+      "mitigation": "Isolate in feature library; pin tested versions; document upgrade path"
+    },
+    {
+      "risk": "Pack data drifting from generic code",
+      "mitigation": "Pack manifests validated in CI; generators deterministic and seeded"
+    },
+    {
+      "risk": "Provider term changes (Anthropic retention conflict)",
+      "mitigation": "Re-verify at design freeze; record terms in docs"
+    }
+  ]
+}

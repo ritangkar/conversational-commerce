@@ -1,0 +1,9 @@
+local.properties
+*.key
+.env
+node_modules/
+dist/
+build/
+*.log
+.idea/
+.vscode/

@@ -1,0 +1,4 @@
+<!-- TRANSCRIBED from owner screenshot (OCC ws DTO beans). Only the visible bean is shown; the enclosing <beans> element was not visible. -->
+<bean class="com.fpp.occ.chat.ChatResponseWsDTO">
+    <property name="reply" type="java.lang.String"/>
+</bean>

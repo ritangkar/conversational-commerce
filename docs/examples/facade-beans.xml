@@ -1,0 +1,4 @@
+<!-- TRANSCRIBED from owner screenshot (facade DTO beans). Only the visible bean is shown; the enclosing <beans> element was not visible. -->
+<bean class="com.fpp.facades.data.chat.ChatRequestData">
+    <property name="message" type="java.lang.String"/>
+</bean>
