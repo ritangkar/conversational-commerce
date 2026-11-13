@@ -1,0 +1,189 @@
+{
+  "pack": "paints",
+  "displayName": "Paints and coatings",
+  "rootCategory": "paints-root",
+  "codePattern": "PN-####",
+  "categories": [
+    {
+      "code": "paints-waterproofing",
+      "name": "Waterproofing"
+    },
+    {
+      "code": "paints-primers",
+      "name": "Primers"
+    },
+    {
+      "code": "paints-interior",
+      "name": "Interior"
+    }
+  ],
+  "products": [
+    {
+      "code": "PN-2001",
+      "name": "Waterproof coating for exterior concrete walls",
+      "description": "Exterior concrete wall waterproofing, medium coverage",
+      "priceMinor": 250000,
+      "attributes": {
+        "surface": "concrete",
+        "coverage": "medium",
+        "finish": "matt"
+      },
+      "category": "paints-waterproofing"
+    },
+    {
+      "code": "PN-2002",
+      "name": "High build waterproof coating exterior",
+      "description": "Exterior waterproof, high coverage",
+      "priceMinor": 420000,
+      "attributes": {
+        "surface": "concrete",
+        "coverage": "high",
+        "finish": "matt"
+      },
+      "category": "paints-waterproofing"
+    },
+    {
+      "code": "PN-2003",
+      "name": "Waterproof coating exterior brick walls",
+      "description": "Exterior wall waterproofing, medium coverage",
+      "priceMinor": 290000,
+      "attributes": {
+        "surface": "brick",
+        "coverage": "medium",
+        "finish": "satin"
+      },
+      "category": "paints-waterproofing"
+    },
+    {
+      "code": "PN-2004",
+      "name": "Interior emulsion",
+      "description": "Interior wall paint",
+      "priceMinor": 180000,
+      "attributes": {
+        "surface": "plaster",
+        "coverage": "medium"
+      },
+      "category": "paints-interior"
+    },
+    {
+      "code": "PN-3001",
+      "name": "Exterior primer Alpha",
+      "description": "Exterior wall primer",
+      "priceMinor": 210000,
+      "attributes": {
+        "coverage": "medium",
+        "base": "water",
+        "coastal": "suitable"
+      },
+      "category": "paints-primers"
+    },
+    {
+      "code": "PN-3002",
+      "name": "Exterior primer Beta",
+      "description": "Exterior wall primer",
+      "priceMinor": 230000,
+      "attributes": {
+        "coverage": "medium",
+        "base": "water"
+      },
+      "category": "paints-primers"
+    },
+    {
+      "code": "PN-3003",
+      "name": "Exterior primer Gamma",
+      "description": "Exterior wall primer",
+      "priceMinor": 250000,
+      "attributes": {
+        "coverage": "high",
+        "base": "solvent",
+        "coastal": "not suitable"
+      },
+      "category": "paints-primers"
+    }
+  ],
+  "attributeMapping": {
+    "searchable": [
+      "surface",
+      "coverage",
+      "finish"
+    ],
+    "comparison": [
+      "coverage",
+      "base",
+      "coastal",
+      "surface",
+      "finish"
+    ],
+    "compatibility": "surface",
+    "useCaseKeywords": [
+      "waterproof",
+      "exterior",
+      "interior",
+      "primer"
+    ]
+  },
+  "synthetic": {
+    "seed": 12,
+    "extraProducts": 10,
+    "template": {
+      "namePrefix": "Interior paint",
+      "category": "paints-interior",
+      "priceMinor": [
+        90000,
+        300000
+      ]
+    }
+  },
+  "dealers": [
+    {
+      "uid": "dealer-paints",
+      "name": "Demo Paints Dealer",
+      "unit": "demo-paints-unit",
+      "orders": [
+        {
+          "product": "PN-2001",
+          "quantity": 20,
+          "daysAgo": [
+            90,
+            60,
+            30
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "PN-3001",
+          "quantity": 10,
+          "daysAgo": [
+            80,
+            50,
+            20
+          ],
+          "status": "DELIVERED"
+        }
+      ]
+    }
+  ],
+  "coPurchase": {
+    "PN-2001": {
+      "PN-3001": 6
+    }
+  },
+  "faq": [
+    {
+      "id": "FAQ-P1",
+      "question": "How long should a primer dry?",
+      "answer": "Allow the primer to dry as stated on the can."
+    }
+  ],
+  "terminology": {
+    "product": "paint or coating"
+  },
+  "samplePrompts": [
+    "I need something to waterproof an exterior concrete wall, medium coverage, under 3000 a unit.",
+    "Compare these three exterior primers and tell me which suits a coastal area."
+  ],
+  "theme": {
+    "--cc-pack-accent": "#EB8C00"
+  },
+  "allPacksDealer": false
+}

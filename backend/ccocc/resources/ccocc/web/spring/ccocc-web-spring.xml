@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ASSUMPTION (AS-03): OCC web Spring config; wire per the yocc template of the owner's release and the extension's web root (spike S1).
+     Controllers use a package scan as the other OCC controllers do. -->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="com.conversational.commerce.occ.controllers"/>
+
+    <bean id="ccUserBindingGuard" class="com.conversational.commerce.occ.security.UserBindingGuard"/>
+    <bean id="ccSessionPropagator" class="com.conversational.commerce.occ.security.SessionPropagator"/>
+
+    <!-- Bounded pool: cc.http.pool.size workers, small queue, then reject (the client falls back to POST /chat). -->
+    <bean id="ccChatStreamExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="${cc.http.pool.size:8}"/>
+        <property name="maxPoolSize" value="${cc.http.pool.size:8}"/>
+        <property name="queueCapacity" value="16"/>
+        <property name="threadNamePrefix" value="cc-stream-"/>
+    </bean>
+    <bean id="ccChatStreamScheduler" class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler">
+        <property name="poolSize" value="2"/>
+        <property name="threadNamePrefix" value="cc-hb-"/>
+    </bean>
+</beans>

@@ -1,0 +1,179 @@
+{
+  "pack": "electrical",
+  "displayName": "Electrical",
+  "rootCategory": "electrical-root",
+  "codePattern": "EL-####",
+  "categories": [
+    {
+      "code": "el-switchgear",
+      "name": "Switchgear"
+    },
+    {
+      "code": "el-cables",
+      "name": "Cables"
+    },
+    {
+      "code": "el-accessories",
+      "name": "Accessories"
+    }
+  ],
+  "products": [
+    {
+      "code": "EL-4821",
+      "name": "Modular switch 16A",
+      "description": "Switch",
+      "priceMinor": 15000,
+      "attributes": {
+        "rating": "16A"
+      },
+      "category": "el-switchgear"
+    },
+    {
+      "code": "EL-9910",
+      "name": "MCB 32A",
+      "description": "Miniature circuit breaker",
+      "priceMinor": 62000,
+      "attributes": {
+        "rating": "32A"
+      },
+      "category": "el-switchgear"
+    },
+    {
+      "code": "EL-1033",
+      "name": "Old PVC cable 2.5mm",
+      "description": "Old PVC cable 2.5mm",
+      "priceMinor": 700000,
+      "attributes": {},
+      "discontinued": true,
+      "replacement": "EL-1034",
+      "category": "el-cables"
+    },
+    {
+      "code": "EL-1034",
+      "name": "Copper cable 2.5mm 100m roll",
+      "description": "Copper cable 2.5mm 100m",
+      "priceMinor": 1100000,
+      "attributes": {
+        "core": "copper"
+      },
+      "category": "el-cables"
+    },
+    {
+      "code": "EL-5050",
+      "name": "Distribution board 8 way",
+      "description": "DB",
+      "priceMinor": 350000,
+      "attributes": {
+        "ways": "8"
+      },
+      "category": "el-switchgear"
+    },
+    {
+      "code": "EL-6001",
+      "name": "Junction box",
+      "description": "Box",
+      "priceMinor": 4000,
+      "attributes": {
+        "type": "ABS"
+      },
+      "category": "el-accessories"
+    },
+    {
+      "code": "EL-6002",
+      "name": "Cable ties pack",
+      "description": "Ties",
+      "priceMinor": 2500,
+      "attributes": {
+        "type": "nylon"
+      },
+      "category": "el-accessories"
+    }
+  ],
+  "attributeMapping": {
+    "searchable": [
+      "rating",
+      "core",
+      "type"
+    ],
+    "comparison": [
+      "rating",
+      "core",
+      "type",
+      "ways"
+    ],
+    "useCaseKeywords": [
+      "switch",
+      "cable",
+      "breaker"
+    ]
+  },
+  "synthetic": {
+    "seed": 13,
+    "extraProducts": 12,
+    "template": {
+      "namePrefix": "Wiring accessory",
+      "category": "el-accessories",
+      "priceMinor": [
+        1500,
+        40000
+      ]
+    }
+  },
+  "dealers": [
+    {
+      "uid": "dealer-electrical",
+      "name": "Demo Electrical Dealer",
+      "unit": "demo-electrical-unit",
+      "orders": [
+        {
+          "product": "EL-4821",
+          "quantity": 20,
+          "daysAgo": [
+            120,
+            90,
+            60,
+            30
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "EL-9910",
+          "quantity": 5,
+          "daysAgo": [
+            100,
+            70,
+            40
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "EL-5050",
+          "quantity": 5,
+          "daysAgo": [
+            4
+          ],
+          "status": "PENDING"
+        }
+      ]
+    }
+  ],
+  "coPurchase": {
+    "EL-9910": {
+      "EL-6001": 6,
+      "EL-6002": 4
+    }
+  },
+  "faq": [],
+  "unresolvableQuickOrderExample": "2 of the green thing from last time",
+  "terminology": {
+    "product": "electrical item"
+  },
+  "samplePrompts": [
+    "Need 20 of EL-4821, 10 x 2.5mm cable 100m, 5 of EL-9910, and whatever replaces EL-1033.",
+    "Review my list before I go to checkout."
+  ],
+  "theme": {
+    "--cc-pack-accent": "#D04A02"
+  },
+  "allPacksDealer": false
+}

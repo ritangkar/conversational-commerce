@@ -1,0 +1,163 @@
+{
+  "pack": "plywood",
+  "displayName": "Plywood and wood panels",
+  "rootCategory": "plywood-root",
+  "codePattern": "PW-####",
+  "categories": [
+    {
+      "code": "pw-plywood",
+      "name": "Plywood"
+    },
+    {
+      "code": "pw-laminates",
+      "name": "Laminates"
+    }
+  ],
+  "products": [
+    {
+      "code": "PW-1801",
+      "name": "Plywood 18mm BWP",
+      "description": "Boiling waterproof plywood",
+      "priceMinor": 320000,
+      "attributes": {
+        "thickness": "18mm"
+      },
+      "category": "pw-plywood"
+    },
+    {
+      "code": "PW-1201",
+      "name": "Plywood 12mm MR",
+      "description": "Moisture resistant plywood",
+      "priceMinor": 210000,
+      "attributes": {
+        "thickness": "12mm"
+      },
+      "category": "pw-plywood"
+    }
+  ],
+  "attributeMapping": {
+    "searchable": [
+      "thickness"
+    ],
+    "comparison": [
+      "thickness"
+    ],
+    "useCaseKeywords": [
+      "plywood",
+      "laminate"
+    ]
+  },
+  "synthetic": {
+    "seed": 15,
+    "extraProducts": 10,
+    "template": {
+      "namePrefix": "Laminate sheet",
+      "category": "pw-laminates",
+      "priceMinor": [
+        50000,
+        250000
+      ]
+    }
+  },
+  "dealers": [
+    {
+      "uid": "dealer-plywood",
+      "name": "Demo Plywood Dealer",
+      "unit": "demo-plywood-unit",
+      "orders": [
+        {
+          "lines": [
+            [
+              "PW-1801",
+              100
+            ],
+            [
+              "PW-1201",
+              30
+            ]
+          ],
+          "daysAgo": [
+            150
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "lines": [
+            [
+              "PW-1801",
+              100
+            ],
+            [
+              "PW-1201",
+              30
+            ]
+          ],
+          "daysAgo": [
+            120
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "lines": [
+            [
+              "PW-1801",
+              95
+            ],
+            [
+              "PW-1201",
+              30
+            ]
+          ],
+          "daysAgo": [
+            90
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "lines": [
+            [
+              "PW-1801",
+              60
+            ],
+            [
+              "PW-1201",
+              30
+            ]
+          ],
+          "daysAgo": [
+            60
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "lines": [
+            [
+              "PW-1801",
+              60
+            ],
+            [
+              "PW-1201",
+              30
+            ]
+          ],
+          "daysAgo": [
+            30
+          ],
+          "status": "DELIVERED"
+        }
+      ]
+    }
+  ],
+  "coPurchase": {},
+  "faq": [],
+  "terminology": {
+    "product": "panel"
+  },
+  "samplePrompts": [
+    "What changed in my recent purchases?"
+  ],
+  "theme": {
+    "--cc-pack-accent": "#2D2D2D"
+  },
+  "allPacksDealer": false
+}

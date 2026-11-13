@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ASSUMPTION (AS-03): standard Backoffice cockpit-ng config; the owner's Backoffice sample has not been supplied.
+     Access to CCProductBusinessAttribute is restricted by user rights (group ccbusinessmanagergroup, see essential data).
+     Events and feedback are read-only: their attributes are write="false" in items.xml. -->
+<config xmlns="http://www.hybris.com/cockpit/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:editorArea="http://www.hybris.com/cockpitng/component/editorArea" xmlns:list-view="http://www.hybris.com/cockpitng/component/listView"
+        xmlns:simple-search="http://www.hybris.com/cockpitng/config/simplesearch" xmlns:advanced-search="http://www.hybris.com/cockpitng/config/advancedsearch"
+        xmlns:wz="http://www.hybris.com/cockpitng/config/wizard-config">
+
+    <context merge-by="type" type="CCConfiguration" component="editor-area">
+        <editorArea:editorArea>
+            <editorArea:tab name="cc.config.general">
+                <editorArea:section name="cc.config.general">
+                    <editorArea:attribute qualifier="code"/>
+                    <editorArea:attribute qualifier="activePack"/>
+                    <editorArea:attribute qualifier="syntheticDataOnly"/>
+                    <editorArea:attribute qualifier="enabled"/>
+                </editorArea:section>
+            </editorArea:tab>
+        </editorArea:editorArea>
+    </context>
+    <context merge-by="type" type="CCConfiguration" component="listview">
+        <list-view:list-view>
+            <list-view:column qualifier="code"/>
+            <list-view:column qualifier="activePack"/>
+            <list-view:column qualifier="syntheticDataOnly"/>
+            <list-view:column qualifier="enabled"/>
+        </list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCConfiguration" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="code"/><simple-search:field name="activePack"/></simple-search:simple-search>
+    </context>
+
+    <context merge-by="type" type="CCConfigEntry" component="editor-area">
+        <editorArea:editorArea>
+            <editorArea:tab name="cc.entry.general">
+                <editorArea:section name="cc.entry.general">
+                    <editorArea:attribute qualifier="configuration"/>
+                    <editorArea:attribute qualifier="entryType"/>
+                    <editorArea:attribute qualifier="packCode"/>
+                    <editorArea:attribute qualifier="key"/>
+                    <editorArea:attribute qualifier="value"/>
+                    <editorArea:attribute qualifier="enabled"/>
+                    <editorArea:attribute qualifier="sortOrder"/>
+                </editorArea:section>
+            </editorArea:tab>
+        </editorArea:editorArea>
+    </context>
+    <context merge-by="type" type="CCConfigEntry" component="listview">
+        <list-view:list-view>
+            <list-view:column qualifier="entryType"/><list-view:column qualifier="packCode"/><list-view:column qualifier="key"/>
+            <list-view:column qualifier="value"/><list-view:column qualifier="enabled"/>
+        </list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCConfigEntry" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="key"/><simple-search:field name="entryType"/><simple-search:field name="packCode"/></simple-search:simple-search>
+    </context>
+    <context merge-by="type" type="CCConfigEntry" component="create-wizard">
+        <wz:flow id="CCConfigEntryWizard" title="create.title(ctx.TYPE_CODE)">
+            <wz:prepare id="prepare"><wz:initialize property="newItem" type="ctx.TYPE_CODE"/></wz:prepare>
+            <wz:step id="step1" label="cc.entry.wizard.step1"><wz:content id="content"><wz:property-list root="newItem">
+                <wz:property qualifier="configuration"/><wz:property qualifier="entryType"/><wz:property qualifier="packCode"/>
+                <wz:property qualifier="key"/><wz:property qualifier="value"/></wz:property-list></wz:content>
+                <wz:navigation id="n"><wz:cancel/><wz:done><wz:save property="newItem"/></wz:done></wz:navigation></wz:step>
+        </wz:flow>
+    </context>
+
+    <context merge-by="type" type="CCInterestEvent" component="listview">
+        <list-view:list-view>
+            <list-view:column qualifier="eventType"/><list-view:column qualifier="productCode"/><list-view:column qualifier="categoryCode"/>
+            <list-view:column qualifier="normalisedToken"/><list-view:column qualifier="packCode"/><list-view:column qualifier="occurredAt"/>
+        </list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCInterestEvent" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="eventType"/><simple-search:field name="productCode"/><simple-search:field name="packCode"/></simple-search:simple-search>
+    </context>
+
+    <context merge-by="type" type="CCFeedback" component="listview">
+        <list-view:list-view>
+            <list-view:column qualifier="rating"/><list-view:column qualifier="intent"/><list-view:column qualifier="toolsUsed"/><list-view:column qualifier="createdAt"/>
+        </list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCFeedback" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="rating"/><simple-search:field name="intent"/></simple-search:simple-search>
+    </context>
+
+    <context merge-by="type" type="CCProductBusinessAttribute" component="editor-area">
+        <editorArea:editorArea>
+            <editorArea:tab name="cc.business.general">
+                <editorArea:section name="cc.business.general">
+                    <editorArea:attribute qualifier="product"/><editorArea:attribute qualifier="priority"/>
+                    <editorArea:attribute qualifier="margin"/><editorArea:attribute qualifier="packCode"/>
+                </editorArea:section>
+            </editorArea:tab>
+        </editorArea:editorArea>
+    </context>
+    <context merge-by="type" type="CCProductBusinessAttribute" component="listview">
+        <list-view:list-view><list-view:column qualifier="product"/><list-view:column qualifier="priority"/><list-view:column qualifier="packCode"/></list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCProductBusinessAttribute" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="product"/><simple-search:field name="packCode"/></simple-search:simple-search>
+    </context>
+
+    <context merge-by="type" type="CCUsageCounter" component="listview">
+        <list-view:list-view>
+            <list-view:column qualifier="customer"/><list-view:column qualifier="periodKey"/><list-view:column qualifier="messageCount"/><list-view:column qualifier="tokenCount"/>
+        </list-view:list-view>
+    </context>
+    <context merge-by="type" type="CCUsageCounter" component="simple-search">
+        <simple-search:simple-search><simple-search:field name="customer"/><simple-search:field name="periodKey"/></simple-search:simple-search>
+    </context>
+</config>

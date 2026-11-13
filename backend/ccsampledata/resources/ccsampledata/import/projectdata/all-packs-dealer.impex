@@ -1,0 +1,5 @@
+# GENERATED. A4: one dealer with orders in every pack.
+INSERT_UPDATE B2BUnit;uid[unique=true];name;active[default=true]
+;demo-all-unit;demo-all-unit;
+INSERT_UPDATE B2BCustomer;uid[unique=true];name;email;groups(uid)[default=b2bgroup];defaultB2BUnit(uid);active[default=true]
+;dealer-all;Demo All-Packs Dealer;dealer-all@example.invalid;;demo-all-unit;

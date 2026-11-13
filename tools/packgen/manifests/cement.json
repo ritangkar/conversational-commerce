@@ -1,0 +1,153 @@
+{
+  "pack": "cement",
+  "displayName": "Cement and building materials",
+  "rootCategory": "cement-root",
+  "codePattern": "CM-####",
+  "categories": [
+    {
+      "code": "cm-cement",
+      "name": "Cement"
+    },
+    {
+      "code": "cm-steel",
+      "name": "Steel"
+    },
+    {
+      "code": "cm-additives",
+      "name": "Additives"
+    }
+  ],
+  "products": [
+    {
+      "code": "CM-1001",
+      "name": "Cement OPC 53 grade 50kg",
+      "description": "Ordinary Portland cement",
+      "priceMinor": 38000,
+      "attributes": {
+        "grade": "53"
+      },
+      "category": "cm-cement"
+    },
+    {
+      "code": "CM-1002",
+      "name": "Cement PPC 50kg",
+      "description": "Portland pozzolana cement",
+      "priceMinor": 36000,
+      "attributes": {
+        "grade": "PPC"
+      },
+      "category": "cm-cement"
+    },
+    {
+      "code": "CM-1003",
+      "name": "Waterproofing additive 5L",
+      "description": "Cement additive",
+      "priceMinor": 95000,
+      "attributes": {},
+      "category": "cm-additives"
+    },
+    {
+      "code": "CM-1004",
+      "name": "TMT steel bar 12mm tonne",
+      "description": "Reinforcement steel",
+      "priceMinor": 6200000,
+      "attributes": {
+        "diameter": "12mm"
+      },
+      "category": "cm-steel"
+    },
+    {
+      "code": "CM-1005",
+      "name": "Binding wire 1kg",
+      "description": "Wire",
+      "priceMinor": 12000,
+      "attributes": {},
+      "category": "cm-steel"
+    }
+  ],
+  "attributeMapping": {
+    "searchable": [
+      "grade",
+      "diameter"
+    ],
+    "comparison": [
+      "grade",
+      "diameter"
+    ],
+    "useCaseKeywords": [
+      "cement",
+      "steel",
+      "wire"
+    ]
+  },
+  "synthetic": {
+    "seed": 14,
+    "extraProducts": 10,
+    "template": {
+      "namePrefix": "Building material",
+      "category": "cm-additives",
+      "priceMinor": [
+        10000,
+        200000
+      ]
+    }
+  },
+  "dealers": [
+    {
+      "uid": "dealer-cement",
+      "name": "Demo Cement Dealer",
+      "unit": "demo-cement-unit",
+      "orders": [
+        {
+          "lines": [
+            [
+              "CM-1001",
+              400
+            ],
+            [
+              "CM-1002",
+              300
+            ],
+            [
+              "CM-1003",
+              50
+            ],
+            [
+              "CM-1004",
+              5
+            ],
+            [
+              "CM-1005",
+              200
+            ]
+          ],
+          "daysAgo": [
+            150,
+            120,
+            90,
+            60,
+            30
+          ],
+          "status": "DELIVERED"
+        }
+      ]
+    }
+  ],
+  "coPurchase": {
+    "CM-1001": {
+      "CM-1003": 7
+    }
+  },
+  "faq": [],
+  "terminology": {
+    "product": "building material"
+  },
+  "samplePrompts": [
+    "I have 5 lakh to spend this month. Prepare my usual items.",
+    "मेरा अगला ऑर्डर तैयार करने में मदद करें"
+  ],
+  "theme": {
+    "--cc-pack-accent": "#DB536A"
+  },
+  "allPacksDealer": false
+}

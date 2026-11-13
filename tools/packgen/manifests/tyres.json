@@ -1,0 +1,223 @@
+{
+  "pack": "tyres",
+  "displayName": "Tyres and auto parts",
+  "rootCategory": "tyres-root",
+  "codePattern": "TY-####",
+  "categories": [
+    {
+      "code": "tyres-passenger",
+      "name": "Passenger tyres"
+    },
+    {
+      "code": "tyres-commercial",
+      "name": "Commercial tyres"
+    },
+    {
+      "code": "tyres-accessories",
+      "name": "Accessories"
+    }
+  ],
+  "products": [
+    {
+      "code": "TY-1001",
+      "name": "Passenger tyre 205/55 R16",
+      "description": "Tubeless radial for cars",
+      "priceMinor": 450000,
+      "attributes": {
+        "size": "205/55 R16"
+      },
+      "category": "tyres-passenger"
+    },
+    {
+      "code": "TY-1002",
+      "name": "SUV tyre 235/65 R17",
+      "description": "Radial for SUVs",
+      "priceMinor": 780000,
+      "attributes": {
+        "size": "235/65 R17"
+      },
+      "category": "tyres-passenger"
+    },
+    {
+      "code": "TY-1003",
+      "name": "Truck tyre 10.00 R20",
+      "description": "Heavy duty truck tyre",
+      "priceMinor": 1450000,
+      "attributes": {
+        "size": "10.00 R20"
+      },
+      "category": "tyres-commercial"
+    },
+    {
+      "code": "TY-1004",
+      "name": "Tyre valve kit",
+      "description": "Valve and cap kit",
+      "priceMinor": 9900,
+      "attributes": {
+        "type": "kit"
+      },
+      "category": "tyres-accessories"
+    },
+    {
+      "code": "TY-1005",
+      "name": "Wheel balancing weights",
+      "description": "Clip-on weights",
+      "priceMinor": 9900,
+      "attributes": {
+        "type": "weights"
+      },
+      "category": "tyres-accessories"
+    }
+  ],
+  "attributeMapping": {
+    "searchable": [
+      "size",
+      "type"
+    ],
+    "comparison": [
+      "size",
+      "type"
+    ],
+    "useCaseKeywords": [
+      "car",
+      "suv",
+      "truck",
+      "balancing"
+    ]
+  },
+  "synthetic": {
+    "seed": 11,
+    "extraProducts": 12,
+    "template": {
+      "namePrefix": "Tyre accessory",
+      "category": "tyres-accessories",
+      "priceMinor": [
+        5000,
+        60000
+      ]
+    }
+  },
+  "dealers": [
+    {
+      "uid": "dealer-tyres",
+      "name": "Demo Tyres Dealer",
+      "unit": "demo-tyres-unit",
+      "orders": [
+        {
+          "product": "TY-1001",
+          "quantity": 40,
+          "daysAgo": [
+            120,
+            90,
+            60,
+            30
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "TY-1002",
+          "quantity": 20,
+          "daysAgo": [
+            100,
+            70,
+            40
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "TY-1004",
+          "quantity": 100,
+          "daysAgo": [
+            120,
+            90,
+            60,
+            30
+          ],
+          "status": "DELIVERED"
+        },
+        {
+          "product": "TY-1003",
+          "quantity": 10,
+          "daysAgoLastMonth": 20,
+          "status": "SHIPPED",
+          "totalMinor": 2500000,
+          "tracking": "TRK-889"
+        },
+        {
+          "product": "TY-1005",
+          "quantity": 20,
+          "daysAgoLastMonth": 22,
+          "status": "SHIPPED",
+          "totalMinor": 1200000,
+          "tracking": "TRK-890"
+        },
+        {
+          "product": "TY-1003",
+          "quantity": 30,
+          "daysAgoLastMonth": 15,
+          "status": "PROCESSING",
+          "totalMinor": 3000000
+        },
+        {
+          "product": "TY-1004",
+          "quantity": 100,
+          "daysAgo": [
+            3
+          ],
+          "status": "PENDING"
+        }
+      ]
+    },
+    {
+      "uid": "dealer-tyres-2",
+      "name": "Second Tyres Dealer (isolation)",
+      "unit": "demo-tyres-unit-2",
+      "orders": [
+        {
+          "product": "TY-1003",
+          "quantity": 99,
+          "daysAgo": [
+            5
+          ],
+          "status": "SHIPPED",
+          "totalMinor": 9999900,
+          "tracking": "TRK-OTHER"
+        }
+      ]
+    }
+  ],
+  "coPurchase": {
+    "TY-1001": {
+      "TY-1004": 8,
+      "TY-1005": 5
+    },
+    "TY-1002": {
+      "TY-1004": 6,
+      "TY-1005": 3
+    }
+  },
+  "faq": [
+    {
+      "id": "FAQ-T1",
+      "question": "What are your delivery times?",
+      "answer": "Standard delivery takes three to five working days."
+    },
+    {
+      "id": "FAQ-T2",
+      "question": "What is the return policy for tyres?",
+      "answer": "Unused tyres can be returned within seven days."
+    }
+  ],
+  "terminology": {
+    "order": "order",
+    "product": "tyre or part"
+  },
+  "samplePrompts": [
+    "I need to prepare my next order. Can you help me identify what I should purchase?",
+    "Show my undelivered orders from last month over 20,000 and where the latest one is."
+  ],
+  "theme": {
+    "--cc-pack-accent": "#FD5108"
+  },
+  "allPacksDealer": false
+}
